@@ -27,6 +27,13 @@ export default async function AdminLayout({
         siteName = settings.value;
     }
 
+    // Double-Protection: Layout Guard
+    // Middleware handles this too, but this ensures no partial render happens if middleware fails/is bypassed locally
+    if (!user || user.user_metadata?.role !== 'admin') {
+        const { redirect } = await import('next/navigation');
+        redirect('/');
+    }
+
     return (
         <div className="flex flex-col min-h-screen">
             <Navbar initialUser={userWithProfile} siteName={siteName} />

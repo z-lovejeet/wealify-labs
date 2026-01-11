@@ -75,5 +75,34 @@ export async function updateSession(request: NextRequest) {
     }
     // ------------------------------
 
+    // --- Route Protection ---
+    const path = request.nextUrl.pathname;
+
+    // 1. Admin Routes Protection
+    if (path.startsWith('/admin')) {
+        if (!user) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+        if (user.user_metadata?.role !== 'admin') {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+    }
+
+    // 2. User Protected Routes
+    const protectedPaths = ['/dashboard', '/settings', '/profile', '/my-courses', '/learn', '/checkout'];
+    if (protectedPaths.some(p => path.startsWith(p))) {
+        if (!user) {
+            return NextResponse.redirect(new URL(`/login?next=${path}`, request.url));
+        }
+    }
+
+    // 3. Auth Routes (redirect if already logged in)
+    if (path.startsWith('/login') || path.startsWith('/register')) {
+        if (user) {
+            return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+    }
+    // ------------------------------
+
     return supabaseResponse
 }

@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { UserNav } from "./UserNav";
 import { createClient } from "@/lib/supabase/client";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import Image from "next/image";
 
 const mainNavItems = [
     { title: "Home", href: "/" },
@@ -77,14 +78,23 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
             <header
                 className={cn(
                     "sticky top-0 z-50 w-full border-b transition-all duration-300",
-                    isScrolled ? "bg-background/80 border-border backdrop-blur-xl shadow-sm py-3" : "bg-background/0 border-transparent py-4"
+                    isScrolled ? "bg-background/80 border-border backdrop-blur-xl shadow-sm py-2" : "bg-background/0 border-transparent py-2"
                 )}
             >
                 <div className="container flex items-center justify-between max-w-7xl mx-auto px-6">
                     {/* Logo */}
                     <div className="flex items-center gap-2">
-                        <Link href="/" className="flex items-center space-x-2 group">
-                            <span className="font-black text-2xl tracking-tighter group-hover:text-primary transition-colors">
+                        <Link href="/" className="flex items-center space-x-3 group">
+                            <div className="relative w-12 h-12">
+                                <Image
+                                    src="/brand-icon.png"
+                                    alt={siteName}
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
+                            </div>
+                            <span className="font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
                                 {siteName}
                             </span>
                         </Link>
@@ -150,8 +160,19 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
                                 <div className="flex flex-col h-full">
                                     {/* Mobile Header */}
                                     <div className="p-6 border-b border-border/50">
-                                        <Link href="/" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
-                                            <span className="font-black text-xl tracking-tighter">{siteName}</span>
+                                        <Link href="/" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
+                                            <div className="relative w-10 h-10">
+                                                <Image
+                                                    src="/brand-icon.png"
+                                                    alt={siteName}
+                                                    fill
+                                                    className="object-contain"
+                                                    priority
+                                                />
+                                            </div>
+                                            <span className="font-bold text-lg tracking-tight">
+                                                {siteName}
+                                            </span>
                                         </Link>
                                     </div>
 

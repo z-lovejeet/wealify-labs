@@ -1,0 +1,143 @@
+"use client";
+
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { PlayCircle, Loader2, BookOpen } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+const COURSE_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+
+export default function MyCoursesPage() {
+    const [loading, setLoading] = useState(true);
+    const [course, setCourse] = useState<any>(null);
+    const [isEnrolled, setIsEnrolled] = useState(false);
+
+    const supabase = createClient();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            // 1. Fetch Course Details
+            const { data: courseData } = await supabase
+                .from('courses')
+                .select('*')
+                .eq('id', COURSE_ID)
+                .single();
+
+            setCourse(courseData);
+
+            // 2. Check Enrollment
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: enrollments } = await supabase
+                    .from('enrollments')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('course_id', COURSE_ID);
+
+                if (enrollments && enrollments.length > 0) {
+                    setIsEnrolled(true);
+                }
+            }
+            setLoading(false);
+        };
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    }
+
+    if (!course) return null; // Or error state
+
+    return (
+        <div className="space-y-6 max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold">My Course</h1>
+
+            {!isEnrolled ? (
+                // Unenrolled State - Sales Focus
+                <Card key={course.id} className="hover:border-primary/50 transition-colors border-dashed border-2 overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                        <div className="relative w-full aspect-video md:aspect-auto md:h-full bg-muted">
+                            {course.thumbnail_url ? (
+                                <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full" />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                                    <BookOpen className="w-16 h-16 text-muted-foreground/50" />
+                                </div>
+                            )}
+                            <div className="absolute top-4 right-4 bg-primary text-primary-foreground px-3 py-1 text-sm rounded-full font-bold shadow-lg">
+                                ${course.price}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col p-6 md:p-8">
+                            <CardHeader className="p-0 mb-4">
+                                <CardTitle className="text-2xl md:text-3xl font-bold">{course.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0 flex-grow flex flex-col justify-between">
+                                <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+                                    {course.description || "A comprehensive guide to starting your side business in 2026."}
+                                </p>
+                                <Link href="/pricing" className="block mt-auto">
+                                    <Button size="lg" className="w-full text-lg h-12 font-bold" variant="default">
+                                        Buy Now
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </div>
+                    </div>
+                </Card>
+            ) : (
+                // Enrolled State - Learning Focus
+                <Card key={course.id} className="hover:border-primary/50 transition-colors overflow-hidden border border-border/50 shadow-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
+                        <div className="md:col-span-2 relative w-full aspect-video md:aspect-auto md:h-full bg-muted">
+                            {course.thumbnail_url ? (
+                                <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full" />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                    <PlayCircle className="w-16 h-16 text-white/80" />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="md:col-span-3 flex flex-col p-6 md:p-8">
+                            <CardHeader className="p-0 mb-4">
+                                <div className="flex justify-between items-start gap-4">
+                                    <CardTitle className="text-2xl font-bold">{course.title}</CardTitle>
+                                    <div className="shrink-0 bg-green-500/10 text-green-500 text-xs px-2 py-1 rounded-full font-medium border border-green-500/20">
+                                        Active
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0 flex-grow flex flex-col justify-between">
+                                <div className="space-y-6">
+                                    <p className="text-muted-foreground line-clamp-2">
+                                        {course.description}
+                                    </p>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-sm font-medium">
+                                            <span>Your Progress</span>
+                                            <span className="text-primary">0%</span>
+                                        </div>
+                                        <Progress value={0} className="h-3" />
+                                    </div>
+                                </div>
+
+                                <Link href={`/learn/${course.id}`} className="block mt-8">
+                                    <Button size="lg" className="w-full text-lg h-12 font-bold shadow-md shadow-primary/20">
+                                        Continue Learning <PlayCircle className="ml-2 w-5 h-5" />
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </div>
+                    </div>
+                </Card>
+            )}
+        </div>
+    );
+}

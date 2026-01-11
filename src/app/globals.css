@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71% 5%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71% 5%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 45 93% 47%;
+    --primary-foreground: 224 71% 4%;
+
+    --secondary: 161 94% 30%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 45 93% 47%;
+
+    --radius: 0.5rem;
+
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    /* Mirroring root since we are dark by default, but standard Shadcn structure keeps this separate */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* =========================================
+   GLOBAL RESPONSIVE RULES (User Request)
+   ========================================= */
+
+/* 1. Fluid Typography using clamp() */
+:root {
+  --fs-sm: clamp(0.8rem, 0.17vi + 0.76rem, 0.89rem);
+  --fs-base: clamp(1rem, 0.34vi + 0.91rem, 1.19rem);
+  --fs-md: clamp(1.25rem, 0.61vi + 1.1rem, 1.58rem);
+  --fs-lg: clamp(1.56rem, 1vi + 1.31rem, 2.11rem);
+  --fs-xl: clamp(1.95rem, 1.5vi + 1.57rem, 2.81rem);
+  --fs-xxl: clamp(2.44rem, 2.38vi + 1.85rem, 3.75rem);
+  --fs-xxxl: clamp(3.05rem, 3.54vi + 2.17rem, 5rem);
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+    /* Base for rems */
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  body {
+    font-size: var(--fs-base);
+    line-height: 1.6;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+
+  h1,
+  .h1 {
+    font-size: var(--fs-xxxl);
+    line-height: 1.1;
+    font-weight: 800;
+  }
+
+  h2,
+  .h2 {
+    font-size: var(--fs-xxl);
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  h3,
+  .h3 {
+    font-size: var(--fs-xl);
+    line-height: 1.3;
+    font-weight: 700;
+  }
+
+  h4,
+  .h4 {
+    font-size: var(--fs-lg);
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  h5,
+  .h5 {
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  small,
+  .small {
+    font-size: var(--fs-sm);
+  }
+}
+
+/* 2. Media Reset */
+img,
+video,
+canvas,
+svg,
+picture {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* 3. Reusable Responsive Container */
+/* 
+   Mobile-first: fluid width with padding
+   Tablet (768px): fixed max-width
+   Desktop (1024px): larger fixed max-width 
+*/
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(1rem, 5vw, 2rem);
+  padding-right: clamp(1rem, 5vw, 2rem);
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1200px;
+    /* Slightly wider than 1024 for better readability on large screens */
+  }
+}
+
+/* 4. Responsive Layout Utilities (Flex/Grid) */
+
+/* Stacks vertically on mobile, switches to row on tablet+ */
+.responsive-row {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 2rem);
+}
+
+@media (min-width: 768px) {
+  .responsive-row {
+    flex-direction: row;
+  }
+}
+
+/* Responsive Grid: 1 col mobile, 2 cols tablet, 3 cols desktop */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1rem, 2vw, 2rem);
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Helper to center content */
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

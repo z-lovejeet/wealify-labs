@@ -19,7 +19,11 @@ const modules = [
 export default function CoursePlayerPage({ params }: { params: { courseId: string } }) {
     const [activeLesson, setActiveLesson] = useState(0);
 
-    const SidebarContent = () => (
+    interface SidebarContentProps {
+        activeLesson: number;
+    }
+
+    const SidebarContent = ({ activeLesson }: SidebarContentProps) => (
         <div className="h-full flex flex-col">
             <div className="p-4 border-b bg-card">
                 <h2 className="font-bold text-lg mb-1">Course Content</h2>
@@ -82,7 +86,7 @@ export default function CoursePlayerPage({ params }: { params: { courseId: strin
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="p-0 w-80">
-                            <SidebarContent />
+                            <SidebarContent activeLesson={activeLesson} />
                         </SheetContent>
                     </Sheet>
                 </div>
@@ -143,7 +147,7 @@ export default function CoursePlayerPage({ params }: { params: { courseId: strin
 
                 {/* Desktop Sidebar (Right side standard for players usually, or Left. Let's do Right like Udemy/Coursera often do for playlist) */}
                 <div className="hidden lg:block w-80 border-l bg-card/30">
-                    <SidebarContent />
+                    <SidebarContent activeLesson={activeLesson} />
                 </div>
             </div>
         </div>

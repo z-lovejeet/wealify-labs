@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { getURL } from "@/lib/get-url";
+
 export default function RegisterPage() {
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [name, setName] = React.useState<string>("")
@@ -50,7 +52,7 @@ export default function RegisterPage() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${getURL()}auth/callback`,
                 },
             })
             if (error) {

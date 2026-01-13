@@ -28,58 +28,48 @@ export default function DashboardPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            // Fetch profile
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
+            // Parallel Fetch 1: Profile, Course, Enrollments
+            const [profileResult, courseResult, enrollmentResult] = await Promise.all([
+                supabase.from('profiles').select('*').eq('id', user.id).single(),
+                supabase.from('courses').select('*').eq('id', COURSE_ID).single(),
+                supabase.from('enrollments').select('*').eq('user_id', user.id).eq('course_id', COURSE_ID)
+            ]);
+
+            const profile = profileResult.data;
+            const courseData = courseResult.data;
+            const enrollments = enrollmentResult.data;
 
             setUser({ ...user, profile });
-
-            // Fetch Single Course Details
-            const { data: courseData } = await supabase
-                .from('courses')
-                .select('*')
-                .eq('id', COURSE_ID)
-                .single();
-
             setCourse(courseData);
-
-            // Check Enrollment
-            const { data: enrollments } = await supabase
-                .from('enrollments')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('course_id', COURSE_ID);
 
             const userIsEnrolled = enrollments && enrollments.length > 0;
             setIsEnrolled(!!userIsEnrolled);
 
+            let newStats = { totalLessons: 0, completedLessons: 0, progress: 0 };
+
             if (userIsEnrolled && courseData) {
-                // 1. Get Total Lessons count
-                // We need to join modules -> lessons. 
-                // Client-side join: fetch all modules for course, then count lessons?
-                // Or robust query:
+                // Fetch Modules (to get lesson IDs) and Completed Lessons in parallel? 
+                // We need lesson IDs first to query progress efficiently, OR we can query progress just by user_id and course_id not possible directly without join.
+                // Let's get modules first.
                 const { data: modules } = await supabase
                     .from('modules')
                     .select('id, lessons(id)')
                     .eq('course_id', COURSE_ID);
 
-                let totalLessons = 0;
+                let total = 0;
                 let lessonIds: string[] = [];
 
                 if (modules) {
                     modules.forEach((m: any) => {
                         if (m.lessons) {
-                            totalLessons += m.lessons.length;
+                            total += m.lessons.length;
                             m.lessons.forEach((l: any) => lessonIds.push(l.id));
                         }
                     });
                 }
+                newStats.totalLessons = total;
 
-                // 2. Get Completed Lessons count
-                let completedCount = 0;
+                // Now fetch completed count
                 if (lessonIds.length > 0) {
                     const { count } = await supabase
                         .from('lesson_progress')
@@ -88,18 +78,15 @@ export default function DashboardPage() {
                         .eq('is_completed', true)
                         .in('lesson_id', lessonIds);
 
-                    completedCount = count || 0;
+                    newStats.completedLessons = count || 0;
                 }
 
-                const progress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-
-                setStats({
-                    totalLessons,
-                    completedLessons: completedCount,
-                    progress
-                });
+                newStats.progress = newStats.totalLessons > 0
+                    ? Math.round((newStats.completedLessons / newStats.totalLessons) * 100)
+                    : 0;
             }
 
+            setStats(newStats);
             setLoading(false);
         };
         fetchData();
@@ -160,28 +147,51 @@ export default function DashboardPage() {
                 </div>
 
                 {isEnrolled && course ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                        <Card className="flex flex-col md:flex-row overflow-hidden hover:bg-card/50 transition-colors">
-                            <div className="w-full md:w-48 h-32 md:h-auto bg-muted shrink-0 relative">
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <PlayCircle className="w-10 h-10 text-white/50" />
-                                </div>
-                            </div>
-                            <div className="flex-1 p-5 flex flex-col justify-center">
-                                <h3 className="font-bold text-lg mb-1">{course.title}</h3>
-                                <p className="text-sm text-muted-foreground mb-4 line-clamp-1">{course.description}</p>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between text-xs">
-                                        <span>Progress</span>
-                                        <span>{stats.progress}%</span>
+                    <div className="w-full gap-6">
+                        <Card className="flex flex-col md:flex-row overflow-hidden hover:bg-card/50 transition-colors border-primary/20 group cursor-pointer">
+                            <div className="w-full md:w-72 h-48 md:h-auto bg-muted shrink-0 relative overflow-hidden">
+                                {course.thumbnail_url ? (
+                                    <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-secondary/30">
+                                        <PlayCircle className="w-12 h-12 text-muted-foreground/50" />
                                     </div>
-                                    <Progress value={stats.progress} className="h-2" />
+                                )}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <PlayCircle className="w-12 h-12 text-white" />
                                 </div>
                             </div>
-                            <div className="p-5 flex items-center border-l border-border/50">
-                                <Link href={`/learn/${course.id}`}>
-                                    <Button size="sm">Resume</Button>
-                                </Link>
+                            <div className="flex-1 p-6 flex flex-col">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 className="font-bold text-xl mb-1 group-hover:text-primary transition-colors">{course.title}</h3>
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20">
+                                            Active Course
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <p className="text-sm text-muted-foreground mb-6 line-clamp-2 md:line-clamp-3 leading-relaxed">
+                                    {course.description}
+                                </p>
+
+                                <div className="mt-auto space-y-4">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                                            <span>{stats.progress}% Complete</span>
+                                            <span>{stats.completedLessons} / {stats.totalLessons} Lessons</span>
+                                        </div>
+                                        <Progress value={stats.progress} className="h-2" />
+                                    </div>
+
+                                    <div className="flex justify-end pt-2">
+                                        <Link href={`/learn/${course.id}`}>
+                                            <Button className="font-bold gap-2">
+                                                Resume Learning <PlayCircle className="w-4 h-4" />
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
                         </Card>
                     </div>

@@ -31,7 +31,7 @@ export default function LoginPage() {
             })
             if (error) {
                 if (error.message.includes("Invalid login credentials")) {
-                    toast.error("Id pass incorrect")
+                    toast.error("Invalid email or password. Please try again.")
                 } else if (error.message.includes("Email not confirmed")) {
                     toast.error("Email not verified")
                 } else {

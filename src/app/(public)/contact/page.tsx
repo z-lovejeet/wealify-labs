@@ -7,8 +7,57 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 export default function ContactPage() {
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        first_name: "",
+        last_name: "",
+        email: "",
+        message: ""
+    });
+
+    const supabase = createClient();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            // Create a timeout promise to prevent infinite hanging
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Request timed out - Server did not respond")), 15000)
+            );
+
+            // Race the insert against the timeout
+            const { error } = await Promise.race([
+                supabase
+                    .from('contact_messages')
+                    .insert([formData]),
+                timeoutPromise
+            ]) as any;
+
+            if (error) throw error;
+
+            toast.success("Message sent successfully! We'll get back to you soon.");
+            setFormData({ first_name: "", last_name: "", email: "", message: "" });
+        } catch (error: any) {
+            console.error("Submission error:", error);
+            // Check for likely missing table error to give better feedback (conditionally)
+            const isMissingTable = error.message?.includes("relation") || error.message?.includes("exist");
+
+            toast.error(
+                isMissingTable
+                    ? "System Error: Message service unavailable. Please contact admin."
+                    : "Failed to send message: " + (error.message || "Unknown error")
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div className="bg-background min-h-screen py-24">
             <div className="container px-6 mx-auto max-w-6xl">
@@ -36,26 +85,58 @@ export default function ContactPage() {
                                 <CardDescription>Fill out the form below and we'll get back to you within 24 hours.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <form className="space-y-6">
+                                <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="first-name">First name</Label>
-                                            <Input id="first-name" placeholder="John" />
+                                            <Label htmlFor="first_name">First name</Label>
+                                            <Input
+                                                id="first_name"
+                                                value={formData.first_name}
+                                                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                                                placeholder="John"
+                                                required
+                                                disabled={loading}
+                                            />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label htmlFor="last-name">Last name</Label>
-                                            <Input id="last-name" placeholder="Doe" />
+                                            <Label htmlFor="last_name">Last name</Label>
+                                            <Input
+                                                id="last_name"
+                                                value={formData.last_name}
+                                                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                                placeholder="Doe"
+                                                required
+                                                disabled={loading}
+                                            />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="email">Email</Label>
-                                        <Input id="email" type="email" placeholder="john@example.com" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            placeholder="john@example.com"
+                                            required
+                                            disabled={loading}
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="message">Message</Label>
-                                        <Textarea id="message" placeholder="How can we help you?" className="min-h-[150px]" />
+                                        <Textarea
+                                            id="message"
+                                            value={formData.message}
+                                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                            placeholder="How can we help you?"
+                                            className="min-h-[150px]"
+                                            required
+                                            disabled={loading}
+                                        />
                                     </div>
-                                    <Button className="w-full h-12 text-lg">Send Message</Button>
+                                    <Button className="w-full h-12 text-lg" disabled={loading}>
+                                        {loading ? "Sending..." : "Send Message"}
+                                    </Button>
                                 </form>
                             </CardContent>
                         </Card>

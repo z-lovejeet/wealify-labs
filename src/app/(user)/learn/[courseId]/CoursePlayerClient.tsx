@@ -66,8 +66,10 @@ export default function CoursePlayerClient({ course, modules }: { course: any, m
                                         >
                                             {lesson.is_locked ? (
                                                 <Lock className="w-4 h-4 shrink-0" />
-                                            ) : (
+                                            ) : lesson.lesson_type === 'video' ? (
                                                 <PlayCircle className="w-4 h-4 shrink-0" />
+                                            ) : (
+                                                <FileText className="w-4 h-4 shrink-0" />
                                             )}
                                             <span className="truncate">{lesson.title}</span>
                                         </button>

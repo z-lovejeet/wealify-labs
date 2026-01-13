@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, BookOpen, Users, ShoppingCart, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, Users, ShoppingCart, Settings, LogOut, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const adminSidebarItems = [
@@ -11,6 +11,7 @@ export const adminSidebarItems = [
     { title: "Courses", href: "/admin/courses", icon: BookOpen },
     { title: "Users", href: "/admin/users", icon: Users },
     { title: "Orders", href: "/admin/orders", icon: ShoppingCart },
+    { title: "Messages", href: "/admin/messages", icon: Mail },
     { title: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

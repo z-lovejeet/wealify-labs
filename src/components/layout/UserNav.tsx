@@ -38,16 +38,16 @@ export function UserNav({ user }: UserNavProps) {
     const router = useRouter();
     const supabase = createClient();
 
-    const handleSignOut = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-            toast.error(error.message);
-        } else {
-            toast.success("Logged out successfully");
-            router.refresh();
-            router.push("/");
-        }
-    };
+    // const handleSignOut = async () => {
+    //     const { error } = await supabase.auth.signOut();
+    //     if (error) {
+    //         toast.error(error.message);
+    //     } else {
+    //         toast.success("Logged out successfully");
+    //         router.refresh();
+    //         router.push("/");
+    //     }
+    // };
 
     const full_name = user?.profile?.full_name || user?.user_metadata?.full_name;
     const email = user?.profile?.email || user?.email;

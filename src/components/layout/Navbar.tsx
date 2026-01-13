@@ -42,6 +42,10 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
         setSiteName(initialSiteName);
     }, [initialSiteName]);
 
+    useEffect(() => {
+        setUser(initialUser);
+    }, [initialUser]);
+
     const supabase = createClient();
 
     // Determine if we are in specific layouts
@@ -56,9 +60,16 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
         window.addEventListener("scroll", handleScroll);
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             if (session?.user) {
-                // relying on server prop for initialUser usually enough, but here we cover edge cases
+                // Fetch profile to get role
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                setUser({ ...session.user, profile });
             } else {
                 setUser(null);
             }

@@ -29,7 +29,7 @@ export default async function AdminLayout({
 
     // Double-Protection: Layout Guard
     // Middleware handles this too, but this ensures no partial render happens if middleware fails/is bypassed locally
-    if (!user || user.user_metadata?.role !== 'admin') {
+    if (!userWithProfile || userWithProfile.profile?.role !== 'admin') {
         const { redirect } = await import('next/navigation');
         redirect('/');
     }

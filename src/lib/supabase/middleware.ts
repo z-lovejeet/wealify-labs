@@ -42,24 +42,43 @@ export async function updateSession(request: NextRequest) {
     // If this is not done, you may be causing the browser and server to go out
     // of sync and terminate the user's session prematurely!
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const path = request.nextUrl.pathname;
+
+    // OPTIMIZATION: Run independent Auth and Maintenance checks in parallel
+    const [
+        { data: { user } },
+        { data: settings }
+    ] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase
+            .from('platform_settings')
+            .select('value')
+            .eq('key', 'maintenance_mode')
+            .single()
+    ]);
 
     // --- Maintenance Mode Logic ---
-    const { data: settings } = await supabase
-        .from('platform_settings')
-        .select('value')
-        .eq('key', 'maintenance_mode')
-        .single();
-
     const isMaintenanceMode = settings?.value === 'true';
-    const isMaintenancePage = request.nextUrl.pathname === '/maintenance';
-    const isLoginPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/auth');
-    const isAdmin = user?.user_metadata?.role === 'admin'; // Note: also check profile if role not in metadata, but metadata is faster middleware access often
+    const isMaintenancePage = path === '/maintenance';
+    const isLoginPage = path.startsWith('/login') || path.startsWith('/auth');
 
     // If Maintenance is ON
     if (isMaintenanceMode) {
+        // Optimization: Check metadata role first to avoid extra DB call for most users
+        // Only fetch full profile if we really need to confirm admin to bypass maintenance
+        let isActualAdmin = user?.user_metadata?.role === 'admin';
+
+        if (user && !isActualAdmin) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+            if (profile?.role === 'admin') isActualAdmin = true;
+        }
+
         // Allow Admins to bypass
-        if (isAdmin) {
+        if (isActualAdmin) {
             return supabaseResponse;
         }
 
@@ -76,14 +95,26 @@ export async function updateSession(request: NextRequest) {
     // ------------------------------
 
     // --- Route Protection ---
-    const path = request.nextUrl.pathname;
-
     // 1. Admin Routes Protection
+    // OPTIMIZATION: Only fetch authoritative profile role if attempting to access Admin area
     if (path.startsWith('/admin')) {
         if (!user) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
-        if (user.user_metadata?.role !== 'admin') {
+
+        let userRole = user?.user_metadata?.role;
+        // Fetch accurate role from DB only for admin routes
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        if (profile?.role) {
+            userRole = profile.role;
+        }
+
+        if (userRole !== 'admin') {
             return NextResponse.redirect(new URL('/', request.url));
         }
     }

@@ -28,8 +28,10 @@ export default function LoginPage() {
                 password,
             })
             if (error) {
-                if (error.message === "Invalid login credentials") {
-                    toast.error("Invalid credentials. Please check your password or ensure your email is verified.")
+                if (error.message.includes("Invalid login credentials")) {
+                    toast.error("Invalid email or password. Please try again.")
+                } else if (error.message.includes("Email not confirmed")) {
+                    toast.error("Please verify your email address before logging in.")
                 } else {
                     toast.error(error.message)
                 }

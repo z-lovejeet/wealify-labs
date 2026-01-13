@@ -21,9 +21,19 @@ export async function GET(request: Request) {
             } else {
                 return NextResponse.redirect(`${origin}${next}`)
             }
+        } else {
+            // Forward the specific code exchange error
+            return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error.message)}`)
         }
     }
 
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    // Check if there are existing errors in the params (e.g. from Supabase directly)
+    const errorParam = searchParams.get('error')
+    const errorDesc = searchParams.get('error_description')
+    if (errorParam) {
+        return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(errorParam)}&error_description=${encodeURIComponent(errorDesc || '')}`)
+    }
+
+    // unexpected: no code and no error
+    return NextResponse.redirect(`${origin}/auth/auth-code-error?error=No+code+provided`)
 }

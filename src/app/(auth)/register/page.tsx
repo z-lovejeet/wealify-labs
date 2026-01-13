@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Github, Chrome, ArrowLeft } from "lucide-react";
+import { Github, Chrome, ArrowLeft, Loader2 } from "lucide-react";
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -34,7 +35,11 @@ export default function RegisterPage() {
                 },
             })
             if (error) {
-                toast.error(error.message)
+                if (error.message.includes("User already registered") || error.message.includes("already registered")) {
+                    toast.error("The email is already registered please login")
+                } else {
+                    toast.error(error.message)
+                }
             } else {
                 toast.success("Account created! Please check your email.")
                 router.push("/login")
@@ -75,8 +80,8 @@ export default function RegisterPage() {
 
             <Card className="w-full max-w-md border-border/50 bg-card/80 backdrop-blur-sm shadow-xl">
                 <CardHeader className="text-center">
-                    <div className="mx-auto bg-primary/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                        <span className="text-2xl font-bold text-primary">W</span>
+                    <div className="mx-auto bg-primary/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
+                        <Image src="/brand-icon.png" alt="Logo" fill className="object-contain p-2" />
                     </div>
                     <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
                     <CardDescription>Enter your email below to create your account</CardDescription>
@@ -119,7 +124,7 @@ export default function RegisterPage() {
                         onClick={handleSignUp}
                         disabled={isLoading}
                     >
-                        {isLoading ? "Creating Account..." : "Sign Up"}
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign Up"}
                     </Button>
 
                     <div className="relative my-4">

@@ -107,14 +107,14 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
 
                         <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
-                                <Label className="text-base">Coinbase Commerce</Label>
+                                <Label className="text-base">NOWPayments</Label>
                                 <p className="text-sm text-muted-foreground">
                                     Accept Crypto (BTC, ETH, USDC, etc.) anonymously.
                                 </p>
                             </div>
                             <Switch
-                                checked={settings.enable_coinbase === 'true'}
-                                onCheckedChange={(checked) => handleChange('enable_coinbase', String(checked))}
+                                checked={settings.enable_nowpayments === 'true'}
+                                onCheckedChange={(checked) => handleChange('enable_nowpayments', String(checked))}
                             />
                         </div>
                     </CardContent>

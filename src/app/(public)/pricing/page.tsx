@@ -171,7 +171,7 @@ export default function PricingPage() {
                                 <Button
                                     size="lg"
                                     onClick={handleAction}
-                                    disabled={loading || hasAccess} // Disable if loading or already owned (though text changes)
+                                    disabled={loading} // Only disable while loading
                                     className="w-full h-14 text-lg font-bold shadow-lg shadow-primary/20 rounded-xl transition-all hover:scale-[1.02]"
                                 >
                                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -189,6 +189,6 @@ export default function PricingPage() {
                     </motion.div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

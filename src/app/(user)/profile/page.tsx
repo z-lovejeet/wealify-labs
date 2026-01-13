@@ -28,6 +28,7 @@ export default function ProfilePage() {
     const [passwordLoading, setPasswordLoading] = useState(false);
 
     const [hasAccess, setHasAccess] = useState(false);
+    const [enrolledCourse, setEnrolledCourse] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -44,16 +45,19 @@ export default function ProfilePage() {
                 .eq('id', user.id)
                 .single();
 
-            // Check for enrollment
-            // In a real app we might fetch the specific course. Here we assume single course ID '1' or check any.
-            // Using logic from checkAccess:
+            // Check for enrollment and fetch course details
             const { data: enrollments } = await supabase
                 .from('enrollments')
-                .select('id')
+                .select('id, courses(title)')
                 .eq('user_id', user.id);
 
             if (enrollments && enrollments.length > 0) {
                 setHasAccess(true);
+                // @ts-ignore - Supabase types join
+                if (enrollments[0]?.courses?.title) {
+                    // @ts-ignore
+                    setEnrolledCourse(enrollments[0].courses.title);
+                }
             }
 
             setUser({ ...user, profile });
@@ -211,7 +215,7 @@ export default function ProfilePage() {
                         <CardContent>
                             <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
                                 <div>
-                                    <h4 className="font-semibold">The Complete Guide</h4>
+                                    <h4 className="font-semibold">{enrolledCourse || "The Modern Side Hustle Blueprint"}</h4>
                                     <p className="text-sm text-muted-foreground">Lifetime Access</p>
                                 </div>
                                 <div>

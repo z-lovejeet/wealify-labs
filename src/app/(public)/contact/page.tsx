@@ -83,24 +83,14 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <div className="font-semibold">Email</div>
-                                        <div className="text-muted-foreground text-sm">support@wealifylabs.com</div>
+                                        <div className="text-muted-foreground text-sm">support@wealifylabs.site</div>
                                     </div>
                                 </CardContent>
                             </Card>
 
 
 
-                            <Card className="bg-secondary/5 border-none hover:bg-secondary/10 transition-colors">
-                                <CardContent className="flex items-center gap-4 p-6">
-                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                        <MapPin className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold">Office</div>
-                                        <div className="text-muted-foreground text-sm">123 Innovation Dr, Tech City, TC 94043</div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+
                         </div>
                     </motion.div>
                 </div>

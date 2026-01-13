@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Github, Chrome, ArrowLeft } from "lucide-react";
+import { Github, Chrome, ArrowLeft, Loader2 } from "lucide-react";
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -15,6 +16,7 @@ import { getURL } from "@/lib/get-url";
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
+    const [isResetting, setIsResetting] = React.useState<boolean>(false)
     const [email, setEmail] = React.useState<string>("")
     const [password, setPassword] = React.useState<string>("")
     const supabase = createClient()
@@ -29,9 +31,9 @@ export default function LoginPage() {
             })
             if (error) {
                 if (error.message.includes("Invalid login credentials")) {
-                    toast.error("Invalid email or password. Please try again.")
+                    toast.error("Id pass incorrect")
                 } else if (error.message.includes("Email not confirmed")) {
-                    toast.error("Please verify your email address before logging in.")
+                    toast.error("Email not verified")
                 } else {
                     toast.error(error.message)
                 }
@@ -66,6 +68,28 @@ export default function LoginPage() {
         }
     }
 
+    const handleResetPassword = async () => {
+        if (!email) {
+            toast.error("Please enter your email address first.");
+            return;
+        }
+        setIsResetting(true);
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${getURL()}auth/callback?next=/dashboard/settings`,
+            });
+            if (error) {
+                toast.error(error.message);
+            } else {
+                toast.success("Password reset link sent! Check your email.");
+            }
+        } catch (error) {
+            toast.error("Failed to send reset email.");
+        } finally {
+            setIsResetting(false);
+        }
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
             {/* Background Decoration */}
@@ -77,8 +101,8 @@ export default function LoginPage() {
 
             <Card className="w-full max-w-md border-border/50 bg-card/80 backdrop-blur-sm shadow-xl">
                 <CardHeader className="text-center">
-                    <div className="mx-auto bg-primary/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-                        <span className="text-2xl font-bold text-primary">W</span>
+                    <div className="mx-auto bg-primary/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4 relative overflow-hidden">
+                        <Image src="/brand-icon.png" alt="Logo" fill className="object-contain p-2" />
                     </div>
                     <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
                     <CardDescription>Enter your email to sign in to your account</CardDescription>
@@ -92,28 +116,34 @@ export default function LoginPage() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            disabled={isLoading}
+                            disabled={isLoading || isResetting}
                         />
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password">Password</Label>
-                            <Link href="#" className="text-xs text-primary hover:underline">Forgot password?</Link>
+                            <button
+                                onClick={handleResetPassword}
+                                disabled={isResetting || isLoading}
+                                className="text-xs text-primary hover:underline disabled:opacity-50"
+                            >
+                                {isResetting ? "Sending..." : "Forgot password?"}
+                            </button>
                         </div>
                         <Input
                             id="password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            disabled={isLoading}
+                            disabled={isLoading || isResetting}
                         />
                     </div>
                     <Button
                         className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
                         onClick={handleEmailLogin}
-                        disabled={isLoading}
+                        disabled={isLoading || isResetting}
                     >
-                        {isLoading ? "Signing in..." : "Sign In"}
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
                     </Button>
 
                     <div className="relative my-4">
@@ -122,10 +152,10 @@ export default function LoginPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <Button variant="outline" onClick={() => handleSocialLogin('github')} disabled={isLoading}>
+                        <Button variant="outline" onClick={() => handleSocialLogin('github')} disabled={isLoading || isResetting}>
                             <Github className="mr-2 h-4 w-4" /> Github
                         </Button>
-                        <Button variant="outline" onClick={() => handleSocialLogin('google')} disabled={isLoading}>
+                        <Button variant="outline" onClick={() => handleSocialLogin('google')} disabled={isLoading || isResetting}>
                             <Chrome className="mr-2 h-4 w-4" /> Google
                         </Button>
                     </div>

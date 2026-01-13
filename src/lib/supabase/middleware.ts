@@ -45,7 +45,12 @@ export async function updateSession(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     // OPTIMIZATION: Only fetch user, skip maintenance check for performance
-    const { data: { user } } = await supabase.auth.getUser();
+    // Also skip for auth callback to prevent session conflicts during code exchange
+    let user = null;
+    if (!path.startsWith('/auth')) {
+        const { data } = await supabase.auth.getUser();
+        user = data.user;
+    }
 
     /* 
        REMOVED MAINTENANCE CHECK FOR PERFORMANCE

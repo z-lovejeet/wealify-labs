@@ -17,19 +17,25 @@ export default function HomePage() {
         {
             name: "James Wilson",
             role: "USA",
-            image: "https://randomuser.me/api/portraits/men/32.jpg",
+            image: "/review-1.jpg",
             content: "I was skeptical at first, but this blueprint completely changed my perspective on wealth creation. The strategies are practical and immediately applicable. I made my first $1,000 within weeks."
         },
         {
             name: "Sarah Jenkins",
             role: "UK",
-            image: "", // Fallback to initials
+            image: "/review-2.jpg",
             content: "Finally, a course that doesn't just sell fluff. The focus on 'Financial Sovereignty' resonated with me deeply. The step-by-step roadmap took all the guesswork out of starting my side business."
+        },
+        {
+            name: "Aarav Patel",
+            role: "India",
+            image: "/review-3.jpg",
+            content: "The content is structured perfectly for beginners. I learned how to scale my freelance business and automate client acquisition. Truly a game-changer for anyone in the digital space."
         },
         {
             name: "Liam O'Connor",
             role: "Australia",
-            image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Liam&backgroundColor=b6e3f4", // Modern/Anime-ish style
+            image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Liam&backgroundColor=b6e3f4",
             content: "The community alone is worth the price of admission. Being surrounded by other driven individuals kept me accountable. The content is top-notch, but the network is priceless."
         },
         {
@@ -41,13 +47,13 @@ export default function HomePage() {
         {
             name: "Oliver Smith",
             role: "Canada",
-            image: "", // Fallback to initials
+            image: "",
             content: "This isn't a 'get rich quick' scheme; it's a 'build wealth consistently' system.  The section on automated sales funnels blew my mind. Highly recommended for anyone serious about their future."
         },
         {
             name: "Jessica Taylor",
             role: "Germany",
-            image: "https://api.dicebear.com/7.x/notionists/svg?seed=Jessica&backgroundColor=ffdfbf", // Artistic/Modern style
+            image: "https://api.dicebear.com/7.x/notionists/svg?seed=Jessica&backgroundColor=ffdfbf",
             content: "This blueprint gave me the freedom to travel the world while my business runs on autopilot. The 'Remote Flexibility' module is a game-changer. Best investment I've made in myself."
         },
         {
@@ -59,7 +65,7 @@ export default function HomePage() {
         {
             name: "Sophie Clark",
             role: "Australia",
-            image: "https://api.dicebear.com/7.x/adventurer/svg?seed=Sophie&backgroundColor=c0aede", // Anime/Cartoon style
+            image: "https://api.dicebear.com/7.x/adventurer/svg?seed=Sophie&backgroundColor=c0aede",
             content: "The value for money is insane. I've paid 10x more for courses with half the content. The 'High-Value Skillstack' module alone paid for the course within a week."
         }
     ];

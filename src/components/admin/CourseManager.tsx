@@ -8,9 +8,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Video, FileText, Trash2, GripVertical, Save, Pencil } from "lucide-react";
+import { Plus, Video, FileText, Trash2, GripVertical, Save, Pencil, Loader2, Upload } from "lucide-react";
 import { createModule, createLesson, deleteModule, deleteLesson, updateCourse, updateModule, updateLesson } from "@/app/actions/admin";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 export function CourseManager({ course, modules }: { course: any, modules: any[] }) {
     const [price, setPrice] = useState(course.price);
@@ -34,6 +35,11 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
     const [newLessonType, setNewLessonType] = useState<"video" | "pdf">("video");
     const [newLessonContent, setNewLessonContent] = useState("");
     const [isAddingLesson, setIsAddingLesson] = useState(false);
+
+    // File Upload State
+    const [isUploading, setIsUploading] = useState(false);
+    const [newLessonFile, setNewLessonFile] = useState<File | null>(null);
+    const [editLessonFile, setEditLessonFile] = useState<File | null>(null);
 
     // Lesson Editing State
     const [editingLesson, setEditingLesson] = useState<any>(null);
@@ -63,16 +69,51 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
         }
     };
 
+    const handleFileUpload = async (file: File) => {
+        setIsUploading(true);
+        try {
+            const supabase = createClient();
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+            const filePath = `${course.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('course_assets')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('course_assets').getPublicUrl(filePath);
+            return data.publicUrl;
+        } catch (error) {
+            console.error("Upload failed", error);
+            throw new Error("Upload failed");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleCreateLesson = async () => {
         if (!activeModuleId) return;
         try {
+            let contentUrl = newLessonContent;
+
+            if (newLessonFile) {
+                toast.info("Uploading file...");
+                contentUrl = await handleFileUpload(newLessonFile);
+            } else if (!contentUrl) {
+                toast.error("Please provide content URL or select a file");
+                return;
+            }
+
             // Calculate order index based on existing lessons in that module (simple approximation)
             const currentModule = modules.find(m => m.id === activeModuleId);
             const currentLessons = currentModule?.lessons || [];
-            await createLesson(activeModuleId, newLessonTitle, newLessonType, newLessonContent, currentLessons.length);
+            await createLesson(activeModuleId, newLessonTitle, newLessonType, contentUrl, currentLessons.length);
 
             setNewLessonTitle("");
             setNewLessonContent("");
+            setNewLessonFile(null);
             setIsAddingLesson(false);
             toast.success("Lesson created");
         } catch (error) {
@@ -83,12 +124,20 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
     const handleUpdateLesson = async () => {
         if (!editingLesson) return;
         try {
+            let contentUrl = editLessonContent;
+
+            if (editLessonFile) {
+                toast.info("Uploading new file...");
+                contentUrl = await handleFileUpload(editLessonFile);
+            }
+
             await updateLesson(editingLesson.id, {
                 title: editLessonTitle,
                 lesson_type: editLessonType,
-                content: editLessonContent
+                content: contentUrl
             });
             setEditingLesson(null);
+            setEditLessonFile(null);
             toast.success("Lesson updated");
         } catch (error) {
             toast.error("Failed to update lesson");
@@ -206,10 +255,34 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Content (URL)</Label>
-                            <Input value={editLessonContent} onChange={(e) => setEditLessonContent(e.target.value)} />
+                            <Label>Content</Label>
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="file"
+                                        accept={editLessonType === 'video' ? "video/*" : ".pdf"}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) setEditLessonFile(file);
+                                        }}
+                                        className="cursor-pointer"
+                                    />
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <span className="w-full border-t" />
+                                    </div>
+                                    <div className="relative flex justify-center text-xs uppercase">
+                                        <span className="bg-background px-2 text-muted-foreground">Or enter URL</span>
+                                    </div>
+                                </div>
+                                <Input value={editLessonContent} onChange={(e) => setEditLessonContent(e.target.value)} />
+                            </div>
                         </div>
-                        <Button onClick={handleUpdateLesson}>Save Changes</Button>
+                        <Button onClick={handleUpdateLesson} disabled={isUploading}>
+                            {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            {isUploading ? "Uploading..." : "Save Changes"}
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -314,9 +387,37 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                         </div>
                         <div className="space-y-2">
                             <Label>Content (URL)</Label>
-                            <Input value={newLessonContent} onChange={(e) => setNewLessonContent(e.target.value)} placeholder="https://..." />
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="file"
+                                        accept={newLessonType === 'video' ? "video/*" : ".pdf"}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) setNewLessonFile(file);
+                                        }}
+                                        className="cursor-pointer"
+                                    />
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <span className="w-full border-t" />
+                                    </div>
+                                    <div className="relative flex justify-center text-xs uppercase">
+                                        <span className="bg-background px-2 text-muted-foreground">Or enter URL</span>
+                                    </div>
+                                </div>
+                                <Input
+                                    value={newLessonContent}
+                                    onChange={(e) => setNewLessonContent(e.target.value)}
+                                    placeholder={newLessonType === 'video' ? "https://..." : "PDF URL"}
+                                />
+                            </div>
                         </div>
-                        <Button onClick={handleCreateLesson} disabled={!newLessonTitle || !newLessonContent}>Create Lesson</Button>
+                        <Button onClick={handleCreateLesson} disabled={isUploading || (!newLessonTitle || (!newLessonContent && !newLessonFile))}>
+                            {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            {isUploading ? "Uploading..." : "Create Lesson"}
+                        </Button>
                     </div>
                 </SheetContent>
             </Sheet>

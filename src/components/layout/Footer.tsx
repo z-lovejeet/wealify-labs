@@ -1,7 +1,34 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export function Footer() {
+    const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubscribe = async () => {
+        if (!email) {
+            toast.error("Please enter your email address.");
+            return;
+        }
+        if (!email.includes("@")) {
+            toast.error("Please enter a valid email address.");
+            return;
+        }
+
+        setLoading(true);
+        // Simulate network request
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        toast.success("Successfully subscribed to newsletter!");
+        setEmail("");
+        setLoading(false);
+    };
+
     return (
         <footer className="bg-card/50 border-t border-border/50 backdrop-blur-sm">
             <div className="container mx-auto px-6 py-16 md:py-24 max-w-7xl">
@@ -23,14 +50,14 @@ export function Footer() {
                         </p>
                         <div className="flex gap-4 pt-2">
                             {/* Social placeholders */}
-                            <div className="w-10 h-10 bg-secondary/30 rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer">
-                                <span className="sr-only">Twitter</span>
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>
-                            </div>
-                            <div className="w-10 h-10 bg-secondary/30 rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer">
-                                <span className="sr-only">LinkedIn</span>
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" /></svg>
-                            </div>
+                            <a href="https://www.instagram.com/wealifylabs/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-secondary/30 rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer">
+                                <span className="sr-only">Instagram</span>
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.416 2.071C6.052 1.824 6.779 1.656 7.843 1.607 8.867 1.56 9.221 1.548 11.649 1.548h.666zM7.843 3.376c-1.013.046-1.57.245-1.92.38a2.916 2.916 0 00-1.065.69 2.916 2.916 0 00-.69 1.065c-.135.35-.334.907-.38 1.92-.047 1.05-.059 1.363-.059 4.569v.12c0 3.206.012 3.518.058 4.569.047 1.013.245 1.57.38 1.92a2.916 2.916 0 00.69 1.065 2.916 2.916 0 001.065.69c.35.135.907.334 1.92.38 1.05.047 1.363.059 4.569.059H12c3.206 0 3.518-.012 4.569-.059 1.013-.047 1.57-.245 1.92-.38a2.916 2.916 0 001.065-.69 2.916 2.916 0 00.69-1.065c.135-.35.334-.907.38-1.92.046-1.05.059-1.363.059-4.569v-.12c0-3.206-.012-3.518-.059-4.569-.046-1.013-.245-1.57-.38-1.92a2.916 2.916 0 00-.69-1.065 2.916 2.916 0 00-1.065-.69c-.35-.135-.907-.334-1.92-.38-1.05-.047-1.363-.059-4.569-.059H11.65c-3.206 0-3.518.012-4.569.059zM12 7a5 5 0 100 10 5 5 0 000-10zm0 1.81a3.19 3.19 0 110 6.38 3.19 3.19 0 010-6.38zm5.32-2.321a1.063 1.063 0 100 2.126 1.063 1.063 0 000-2.126z" clipRule="evenodd" /></svg>
+                            </a>
+                            <a href="#" className="w-10 h-10 bg-secondary/30 rounded-full flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer">
+                                <span className="sr-only">TikTok</span>
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.74-1.75.46-.91.33-1.92.35-2.91v-8.38c-1.15.35-2.4.52-3.61.54-.03-1.36-.01-2.73 0-4.09h7.4z" /></svg>
+                            </a>
                         </div>
                     </div>
 
@@ -63,10 +90,17 @@ export function Footer() {
                                 <input
                                     type="email"
                                     placeholder="Enter your email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    disabled={loading}
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 />
-                                <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                                    Subscribe
+                                <button
+                                    onClick={handleSubscribe}
+                                    disabled={loading}
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                                >
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Subscribe"}
                                 </button>
                             </div>
                             <p className="text-xs text-muted-foreground/60">We respect your privacy. Unsubscribe at any time.</p>
@@ -79,7 +113,7 @@ export function Footer() {
                     <div className="flex gap-4 md:gap-6 items-center">
                         <div className="flex items-center gap-3 text-[10px] uppercase font-bold tracking-widest text-muted-foreground/40">
                             <span>PayPal</span>
-                            <span>Coinbase</span>
+                            <span>NOWPayments</span>
                         </div>
                         <span className="hidden md:inline h-3 w-px bg-border/50"></span>
                         <div className="flex gap-4">

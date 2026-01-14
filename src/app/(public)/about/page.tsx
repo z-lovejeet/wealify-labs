@@ -117,7 +117,7 @@ export default function AboutPage() {
                     className="flex flex-col items-center text-center space-y-8"
                 >
                     <h2 className="text-3xl md:text-5xl font-bold max-w-2xl mx-auto">Start Your Learning Journey</h2>
-                    <Link href="/courses">
+                    <Link href="/pricing">
                         <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">Explore Courses</Button>
                     </Link>
                 </motion.div>

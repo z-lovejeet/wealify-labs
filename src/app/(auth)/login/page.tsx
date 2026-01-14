@@ -90,6 +90,31 @@ export default function LoginPage() {
         }
     }
 
+    const handleMagicLink = async () => {
+        if (!email) {
+            toast.error("Please enter your email address first.")
+            return
+        }
+        setIsLoading(true)
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: `${getURL()}auth/callback`,
+                }
+            })
+            if (error) {
+                toast.error(error.message)
+            } else {
+                toast.success("Magic link sent! Check your email to log in.")
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
             {/* Background Decoration */}
@@ -144,6 +169,15 @@ export default function LoginPage() {
                         disabled={isLoading || isResetting}
                     >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign In"}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        className="w-full"
+                        onClick={handleMagicLink}
+                        disabled={isLoading || isResetting}
+                        type="button"
+                    >
+                        Sign in with Magic Link
                     </Button>
 
                     <div className="relative my-4">

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, Award, Clock, Loader2, BookOpen } from "lucide-react";
+import { PlayCircle, Award, Clock, Loader2, BookOpen, Star, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -25,81 +25,137 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
 
-            // Parallel Fetch 1: Profile, Course, Enrollments
-            const [profileResult, courseResult, enrollmentResult] = await Promise.all([
-                supabase.from('profiles').select('*').eq('id', user.id).single(),
-                supabase.from('courses').select('*').eq('id', COURSE_ID).single(),
-                supabase.from('enrollments').select('*').eq('user_id', user.id).eq('course_id', COURSE_ID)
-            ]);
+                // Parallel Fetch 1: Profile, Course, Enrollments
+                const [profileResult, courseResult, enrollmentResult] = await Promise.all([
+                    supabase.from('profiles').select('*').eq('id', user.id).single(),
+                    supabase.from('courses').select('*').eq('id', COURSE_ID).single(),
+                    supabase.from('enrollments').select('*').eq('user_id', user.id).eq('course_id', COURSE_ID)
+                ]);
 
-            const profile = profileResult.data;
-            const courseData = courseResult.data;
-            const enrollments = enrollmentResult.data;
+                const profile = profileResult.data;
+                const courseData = courseResult.data;
+                const enrollments = enrollmentResult.data;
 
-            setUser({ ...user, profile });
-            setCourse(courseData);
+                setUser({ ...user, profile });
+                setCourse(courseData);
 
-            const userIsEnrolled = enrollments && enrollments.length > 0;
-            setIsEnrolled(!!userIsEnrolled);
+                const userIsEnrolled = enrollments && enrollments.length > 0;
+                setIsEnrolled(!!userIsEnrolled);
 
-            let newStats = { totalLessons: 0, completedLessons: 0, progress: 0 };
+                let newStats = { totalLessons: 0, completedLessons: 0, progress: 0 };
 
-            if (userIsEnrolled && courseData) {
-                // Fetch Modules (to get lesson IDs) and Completed Lessons in parallel? 
-                // We need lesson IDs first to query progress efficiently, OR we can query progress just by user_id and course_id not possible directly without join.
-                // Let's get modules first.
-                const { data: modules } = await supabase
-                    .from('modules')
-                    .select('id, lessons(id)')
-                    .eq('course_id', COURSE_ID);
+                if (userIsEnrolled && courseData) {
+                    const { data: modules } = await supabase
+                        .from('modules')
+                        .select('id, lessons(id)')
+                        .eq('course_id', COURSE_ID);
 
-                let total = 0;
-                let lessonIds: string[] = [];
+                    let total = 0;
+                    let lessonIds: string[] = [];
 
-                if (modules) {
-                    modules.forEach((m: any) => {
-                        if (m.lessons) {
-                            total += m.lessons.length;
-                            m.lessons.forEach((l: any) => lessonIds.push(l.id));
-                        }
-                    });
+                    if (modules) {
+                        modules.forEach((m: any) => {
+                            if (m.lessons) {
+                                total += m.lessons.length;
+                                m.lessons.forEach((l: any) => lessonIds.push(l.id));
+                            }
+                        });
+                    }
+                    newStats.totalLessons = total;
+
+                    if (lessonIds.length > 0) {
+                        const { count } = await supabase
+                            .from('lesson_progress')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('user_id', user.id)
+                            .eq('is_completed', true)
+                            .in('lesson_id', lessonIds);
+
+                        newStats.completedLessons = count || 0;
+                    }
+
+                    newStats.progress = newStats.totalLessons > 0
+                        ? Math.round((newStats.completedLessons / newStats.totalLessons) * 100)
+                        : 0;
                 }
-                newStats.totalLessons = total;
 
-                // Now fetch completed count
-                if (lessonIds.length > 0) {
-                    const { count } = await supabase
-                        .from('lesson_progress')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('user_id', user.id)
-                        .eq('is_completed', true)
-                        .in('lesson_id', lessonIds);
-
-                    newStats.completedLessons = count || 0;
-                }
-
-                newStats.progress = newStats.totalLessons > 0
-                    ? Math.round((newStats.completedLessons / newStats.totalLessons) * 100)
-                    : 0;
+                setStats(newStats);
+            } catch (error) {
+                console.error("Dashboard Load Error:", error);
+            } finally {
+                setLoading(false);
             }
-
-            setStats(newStats);
-            setLoading(false);
         };
         fetchData();
     }, []);
+
+    // State for modals
+    const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+    // Certificate Form State
+    const [certName, setCertName] = useState("");
+    const [certEmail, setCertEmail] = useState("");
+    const [certStatus, setCertStatus] = useState<"idle" | "submitting" | "success">("idle");
+
+    // Review Form State
+    const [reviewName, setReviewName] = useState("");
+    const [reviewCountry, setReviewCountry] = useState("");
+    const [reviewFeedback, setReviewFeedback] = useState("");
+    const [reviewStatus, setReviewStatus] = useState<"idle" | "submitting" | "success">("idle");
+
+    const handleRequestCertificate = async () => {
+        setCertStatus("submitting");
+        try {
+            const { error } = await supabase.from('certificate_requests').insert({
+                user_id: user.id,
+                course_id: course.id,
+                full_name: certName,
+                email: certEmail
+            });
+            if (error) throw error;
+            setCertStatus("success");
+            // setTimeout(() => setIsCertModalOpen(false), 2000);
+        } catch (error) {
+            console.error(error);
+            setCertStatus("idle");
+            alert("Failed to submit request.");
+        }
+    };
+
+    const handleSubmitReview = async () => {
+        setReviewStatus("submitting");
+        try {
+            const { error } = await supabase.from('reviews').insert({
+                user_id: user.id,
+                course_id: course.id,
+                student_name: reviewName,
+                student_country: reviewCountry,
+                feedback: reviewFeedback
+            });
+            if (error) throw error;
+            setReviewStatus("success");
+            // setTimeout(() => setIsReviewModalOpen(false), 2000);
+        } catch (error) {
+            console.error(error);
+            setReviewStatus("idle");
+            alert("Failed to submit review.");
+        }
+    };
 
     if (loading) {
         return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
     const firstName = user?.profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Member";
+    const isCompleted = stats.progress === 100;
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500 relative">
             <div>
                 <h1 className="text-3xl font-bold mb-2">Welcome back, {firstName}!</h1>
                 <p className="text-muted-foreground">You've made great progress. Keep learning!</p>
@@ -140,6 +196,26 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4">
+                <Button
+                    className="gap-2"
+                    variant={isCompleted ? "default" : "outline"}
+                    disabled={!isCompleted}
+                    onClick={() => setIsCertModalOpen(true)}
+                >
+                    <Award className="w-4 h-4" /> Request Certificate {(!isCompleted) && "(Locked)"}
+                </Button>
+                <Button
+                    className="gap-2"
+                    variant={isCompleted ? "secondary" : "outline"}
+                    disabled={!isCompleted}
+                    onClick={() => setIsReviewModalOpen(true)}
+                >
+                    <Star className="w-4 h-4" /> Write Review {(!isCompleted) && "(Locked)"}
+                </Button>
+            </div>
+
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold">Your Course</h2>
@@ -154,11 +230,11 @@ export default function DashboardPage() {
                                     <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                                 ) : (
                                     <div className="absolute inset-0 flex items-center justify-center bg-secondary/30">
-                                        <PlayCircle className="w-12 h-12 text-muted-foreground/50" />
+                                        <BookOpen className="w-12 h-12 text-muted-foreground/50" />
                                     </div>
                                 )}
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <PlayCircle className="w-12 h-12 text-white" />
+                                    <BookOpen className="w-12 h-12 text-white" />
                                 </div>
                             </div>
                             <div className="flex-1 p-6 flex flex-col">
@@ -187,7 +263,7 @@ export default function DashboardPage() {
                                     <div className="flex justify-end pt-2">
                                         <Link href={`/learn/${course.id}`}>
                                             <Button className="font-bold gap-2">
-                                                Resume Learning <PlayCircle className="w-4 h-4" />
+                                                Resume Learning <BookOpen className="w-4 h-4" />
                                             </Button>
                                         </Link>
                                     </div>
@@ -210,6 +286,118 @@ export default function DashboardPage() {
                     </div>
                 )}
             </div>
+
+            {/* Certificate Modal */}
+            {isCertModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <Card className="w-full max-w-md relative">
+                        <div className="absolute top-4 right-4 cursor-pointer p-2" onClick={() => setIsCertModalOpen(false)}>
+                            X
+                        </div>
+                        <CardHeader>
+                            <CardTitle>Request Certificate</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {certStatus === "success" ? (
+                                <div className="text-center py-8">
+                                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                    <h3 className="text-xl font-bold mb-2">Request Sent!</h3>
+                                    <p className="text-muted-foreground">We will review your progress and email your certificate shortly.</p>
+                                    <Button onClick={() => setIsCertModalOpen(false)} className="mt-6">Close</Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <p className="text-sm text-muted-foreground">Please confirm your details for the certificate.</p>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Full Name (for Certificate)</label>
+                                        <input
+                                            className="w-full p-2 border rounded-md bg-background"
+                                            value={certName}
+                                            onChange={(e) => setCertName(e.target.value)}
+                                            placeholder="e.g. John Doe"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Email Address</label>
+                                        <input
+                                            className="w-full p-2 border rounded-md bg-background"
+                                            value={certEmail}
+                                            onChange={(e) => setCertEmail(e.target.value)}
+                                            placeholder="e.g. john@example.com"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end gap-2 pt-4">
+                                        <Button variant="outline" onClick={() => setIsCertModalOpen(false)}>Cancel</Button>
+                                        <Button onClick={handleRequestCertificate} disabled={certStatus === "submitting" || !certName || !certEmail}>
+                                            {certStatus === "submitting" ? "Sending..." : "Request Certificate"}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* Review Modal */}
+            {isReviewModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+                    <Card className="w-full max-w-md relative">
+                        <div className="absolute top-4 right-4 cursor-pointer p-2" onClick={() => setIsReviewModalOpen(false)}>
+                            X
+                        </div>
+                        <CardHeader>
+                            <CardTitle>Write a Review</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {reviewStatus === "success" ? (
+                                <div className="text-center py-8">
+                                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                    <h3 className="text-xl font-bold mb-2">Thank You!</h3>
+                                    <p className="text-muted-foreground">Your feedback helps us improve.</p>
+                                    <Button onClick={() => setIsReviewModalOpen(false)} className="mt-6">Close</Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Your Name</label>
+                                        <input
+                                            className="w-full p-2 border rounded-md bg-background"
+                                            value={reviewName}
+                                            onChange={(e) => setReviewName(e.target.value)}
+                                            placeholder="Your Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Country</label>
+                                        <input
+                                            className="w-full p-2 border rounded-md bg-background"
+                                            value={reviewCountry}
+                                            onChange={(e) => setReviewCountry(e.target.value)}
+                                            placeholder="e.g. USA"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Feedback</label>
+                                        <textarea
+                                            className="w-full p-2 border rounded-md bg-background min-h-[100px]"
+                                            value={reviewFeedback}
+                                            onChange={(e) => setReviewFeedback(e.target.value)}
+                                            placeholder="What did you think of the course?"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end gap-2 pt-4">
+                                        <Button variant="outline" onClick={() => setIsReviewModalOpen(false)}>Cancel</Button>
+                                        <Button onClick={handleSubmitReview} disabled={reviewStatus === "submitting" || !reviewName || !reviewFeedback}>
+                                            {reviewStatus === "submitting" ? "Submitting..." : "Submit Review"}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

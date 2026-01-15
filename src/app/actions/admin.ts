@@ -26,7 +26,7 @@ export async function createModule(courseId: string, title: string, orderIndex: 
     return data;
 }
 
-export async function createLesson(moduleId: string, title: string, type: "video" | "pdf", content: string, orderIndex: number) {
+export async function createLesson(moduleId: string, title: string, type: "text" | "pdf", content: string, orderIndex: number) {
     const supabase = await createClient(); // Await the promise
 
     const { data, error } = await supabase
@@ -116,7 +116,7 @@ export async function updateModule(moduleId: string, title: string) {
     revalidatePath('/admin/courses');
 }
 
-export async function updateLesson(lessonId: string, updates: { title?: string; lesson_type?: "video" | "pdf"; content?: string }) {
+export async function updateLesson(lessonId: string, updates: { title?: string; lesson_type?: "text" | "pdf"; content?: string }) {
     const supabase = await createClient();
     const { error } = await supabase
         .from('lessons')

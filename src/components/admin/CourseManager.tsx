@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Video, FileText, Trash2, GripVertical, Save, Pencil, Loader2, Upload } from "lucide-react";
+import { Plus, FileText, Trash2, GripVertical, Save, Pencil, Loader2, Upload } from "lucide-react";
 import { createModule, createLesson, deleteModule, deleteLesson, updateCourse, updateModule, updateLesson } from "@/app/actions/admin";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -32,7 +32,7 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
     // Lesson State
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
     const [newLessonTitle, setNewLessonTitle] = useState("");
-    const [newLessonType, setNewLessonType] = useState<"video" | "pdf">("video");
+    const [newLessonType, setNewLessonType] = useState<"text" | "pdf">("text");
     const [newLessonContent, setNewLessonContent] = useState("");
     const [isAddingLesson, setIsAddingLesson] = useState(false);
 
@@ -45,7 +45,7 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
     const [editingLesson, setEditingLesson] = useState<any>(null);
     const [editLessonTitle, setEditLessonTitle] = useState("");
     const [editLessonContent, setEditLessonContent] = useState("");
-    const [editLessonType, setEditLessonType] = useState<"video" | "pdf">("video");
+    const [editLessonType, setEditLessonType] = useState<"text" | "pdf">("text");
 
     const handleCreateModule = async () => {
         try {
@@ -244,13 +244,13 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                         </div>
                         <div className="space-y-2">
                             <Label>Type</Label>
-                            <Select value={editLessonType} onValueChange={(v: "video" | "pdf") => setEditLessonType(v)}>
+                            <Select value={editLessonType} onValueChange={(v: "text" | "pdf") => setEditLessonType(v)}>
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="video">Video URL</SelectItem>
                                     <SelectItem value="pdf">PDF</SelectItem>
+                                    <SelectItem value="text">Text / Article</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -260,7 +260,7 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                                 <div className="flex items-center gap-2">
                                     <Input
                                         type="file"
-                                        accept={editLessonType === 'video' ? "video/*" : ".pdf"}
+                                        accept={editLessonType === 'pdf' ? ".pdf" : "image/*"}
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) setEditLessonFile(file);
@@ -331,7 +331,7 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                                 module.lessons.sort((a: any, b: any) => a.order_index - b.order_index).map((lesson: any) => (
                                     <div key={lesson.id} className="flex items-center justify-between p-3 rounded-md bg-muted/50 border ml-8">
                                         <div className="flex items-center gap-3">
-                                            {lesson.lesson_type === 'video' ? <Video className="h-4 w-4 text-blue-500" /> : <FileText className="h-4 w-4 text-orange-500" />}
+                                            {lesson.lesson_type === 'text' ? <FileText className="h-4 w-4 text-blue-500" /> : <FileText className="h-4 w-4 text-orange-500" />}
                                             <span className="font-medium">{lesson.title}</span>
                                         </div>
                                         <div className="flex items-center gap-4">
@@ -371,16 +371,16 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label>Lesson Title</Label>
-                            <Input value={newLessonTitle} onChange={(e) => setNewLessonTitle(e.target.value)} placeholder="e.g. Video 1" />
+                            <Input value={newLessonTitle} onChange={(e) => setNewLessonTitle(e.target.value)} placeholder="e.g. Lesson 1" />
                         </div>
                         <div className="space-y-2">
                             <Label>Type</Label>
-                            <Select value={newLessonType} onValueChange={(v: "video" | "pdf") => setNewLessonType(v)}>
+                            <Select value={newLessonType} onValueChange={(v: "text" | "pdf") => setNewLessonType(v)}>
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="video">Video URL</SelectItem>
+                                    <SelectItem value="text">Text / Article</SelectItem>
                                     <SelectItem value="pdf">PDF</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -391,7 +391,7 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                                 <div className="flex items-center gap-2">
                                     <Input
                                         type="file"
-                                        accept={newLessonType === 'video' ? "video/*" : ".pdf"}
+                                        accept={newLessonType === 'pdf' ? ".pdf" : "image/*"}
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
                                             if (file) setNewLessonFile(file);
@@ -410,7 +410,7 @@ export function CourseManager({ course, modules }: { course: any, modules: any[]
                                 <Input
                                     value={newLessonContent}
                                     onChange={(e) => setNewLessonContent(e.target.value)}
-                                    placeholder={newLessonType === 'video' ? "https://..." : "PDF URL"}
+                                    placeholder={newLessonType === 'text' ? "Content or URL" : "PDF URL"}
                                 />
                             </div>
                         </div>

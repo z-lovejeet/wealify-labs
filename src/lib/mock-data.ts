@@ -25,7 +25,7 @@ export const singleCourse = {
     image: "/images/course-cover.jpg", // Placeholder
     features: [
         "7 Comprehensive Modules",
-        "30+ Actionable Video Lessons",
+        "30+ Actionable Lessons",
         "Downloadable PDF Worksheets",
         "Lifetime Access",
         "Certificate of Completion",
@@ -35,64 +35,64 @@ export const singleCourse = {
         {
             title: "Module 1: The Mindset Shift",
             lessons: [
-                { title: "Welcome & Course Overview", type: "video", duration: "5:00" },
-                { title: "Employee vs. Entrepreneur Mindset", type: "video", duration: "12:00" },
-                { title: "Overcoming Fear of Failure", type: "video", duration: "15:00" },
-                { title: "Setting Your 30-Day Goal", type: "video", duration: "10:00" },
+                { title: "Welcome & Course Overview", type: "text", duration: "5 min read" },
+                { title: "Employee vs. Entrepreneur Mindset", type: "text", duration: "10 min read" },
+                { title: "Overcoming Fear of Failure", type: "text", duration: "8 min read" },
+                { title: "Setting Your 30-Day Goal", type: "text", duration: "5 min read" },
             ]
         },
         {
             title: "Module 2: Idea Generation & Validation",
             lessons: [
-                { title: "Finding Your Niche", type: "video", duration: "18:00" },
-                { title: "The 'Problem First' Approach", type: "video", duration: "14:00" },
-                { title: "Validating Your Idea for $0", type: "video", duration: "20:00" },
+                { title: "Finding Your Niche", type: "text", duration: "12 min read" },
+                { title: "The 'Problem First' Approach", type: "text", duration: "8 min read" },
+                { title: "Validating Your Idea for $0", type: "text", duration: "15 min read" },
                 { title: "Tools for Market Research", type: "pdf", duration: "5 min read" },
             ]
         },
         {
             title: "Module 3: Building Your Offer",
             lessons: [
-                { title: "Crafting an Irresistible Offer", type: "video", duration: "22:00" },
-                { title: "Pricing Psychology", type: "video", duration: "15:00" },
-                { title: "Creating Your MVP", type: "video", duration: "25:00" },
+                { title: "Crafting an Irresistible Offer", type: "text", duration: "12 min read" },
+                { title: "Pricing Psychology", type: "text", duration: "10 min read" },
+                { title: "Creating Your MVP", type: "text", duration: "15 min read" },
                 { title: "Offer Worksheet", type: "pdf", duration: "10 min read" },
             ]
         },
         {
             title: "Module 4: Setting Up Your Systems",
             lessons: [
-                { title: "Essential Tech Stack", type: "video", duration: "12:00" },
-                { title: "Automating Payments", type: "video", duration: "16:00" },
-                { title: "Email Marketing Basics", type: "video", duration: "18:00" },
-                { title: "Time Management for Side Hustlers", type: "video", duration: "14:00" },
+                { title: "Essential Tech Stack", type: "text", duration: "8 min read" },
+                { title: "Automating Payments", type: "text", duration: "10 min read" },
+                { title: "Email Marketing Basics", type: "text", duration: "12 min read" },
+                { title: "Time Management for Side Hustlers", type: "text", duration: "8 min read" },
             ]
         },
         {
             title: "Module 5: Getting Your First Sales",
             lessons: [
-                { title: "Organic Social Media Strategy", type: "video", duration: "20:00" },
-                { title: "Cold Outreach Masterclass", type: "video", duration: "25:00" },
-                { title: "Leveraging Your Network", type: "video", duration: "10:00" },
-                { title: "Handling Objections", type: "video", duration: "15:00" },
+                { title: "Organic Social Media Strategy", type: "text", duration: "15 min read" },
+                { title: "Cold Outreach Masterclass", type: "text", duration: "18 min read" },
+                { title: "Leveraging Your Network", type: "text", duration: "5 min read" },
+                { title: "Handling Objections", type: "text", duration: "10 min read" },
             ]
         },
         {
             title: "Module 6: Scaling & Automation",
             lessons: [
-                { title: "When to Hire Help", type: "video", duration: "15:00" },
-                { title: "Reinvesting Profits", type: "video", duration: "12:00" },
-                { title: "Building a Personal Brand", type: "video", duration: "20:00" },
+                { title: "When to Hire Help", type: "text", duration: "8 min read" },
+                { title: "Reinvesting Profits", type: "text", duration: "6 min read" },
+                { title: "Building a Personal Brand", type: "text", duration: "12 min read" },
                 { title: "Scaling Roadmap", type: "pdf", duration: "5 min read" },
             ]
         },
         {
             title: "Module 7: Bonus Case Studies",
             lessons: [
-                { title: "Case Study: $1k/mo Freelance Writer", type: "video", duration: "20:00" },
-                { title: "Case Study: $5k/mo E-com Store", type: "video", duration: "25:00" },
-                { title: "Case Study: $10k/mo Consultant", type: "video", duration: "30:00" },
-                { title: "Final Words & Next Steps", type: "video", duration: "05:00" },
+                { title: "Case Study: $1k/mo Freelance Writer", type: "text", duration: "15 min read" },
+                { title: "Case Study: $5k/mo E-com Store", type: "text", duration: "20 min read" },
+                { title: "Case Study: $10k/mo Consultant", type: "text", duration: "25 min read" },
+                { title: "Final Words & Next Steps", type: "text", duration: "5 min read" },
             ]
         }
     ]

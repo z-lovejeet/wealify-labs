@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Shield, TrendingUp, Users, Lock, ArrowRight, Laptop, Banknote, Target, CheckCircle2, Star, Quote } from "lucide-react";
+import { Shield, TrendingUp, Users, Lock, ArrowRight, Laptop, Banknote, Target, CheckCircle2, Star, Quote, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { singleCourse } from "@/lib/mock-data";
 
@@ -316,7 +316,7 @@ export default function HomePage() {
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className="relative h-[600px] rounded-3xl overflow-hidden bg-card border border-border/50 flex flex-col items-center justify-center p-8 text-center shadow-2xl"
+                            className="relative min-h-[600px] h-auto rounded-3xl overflow-hidden bg-card border border-border/50 flex flex-col items-center justify-center p-8 text-center shadow-2xl"
                         >
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60"></div>
 
@@ -325,10 +325,10 @@ export default function HomePage() {
 
                             <div className="grid grid-cols-1 gap-4 w-full max-w-sm relative z-10">
                                 <div className="p-6 bg-background rounded-xl border border-white/5 flex items-center gap-4 text-left hover:border-primary/20 transition-colors">
-                                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500"><Laptop className="w-5 h-5" /></div>
+                                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500"><BookOpen className="w-5 h-5" /></div>
                                     <div>
-                                        <div className="font-bold">Comprehensive Video Library</div>
-                                        <div className="text-xs text-muted-foreground">HD Lessons on every topic</div>
+                                        <div className="font-bold">In-Depth Lesson Modules</div>
+                                        <div className="text-xs text-muted-foreground">Detailed guides on every topic</div>
                                     </div>
                                 </div>
                                 <div className="p-6 bg-background rounded-xl border border-white/5 flex items-center gap-4 text-left hover:border-primary/20 transition-colors">
@@ -343,6 +343,20 @@ export default function HomePage() {
                                     <div>
                                         <div className="font-bold">Private Community</div>
                                         <div className="text-xs text-muted-foreground">Network with winners</div>
+                                    </div>
+                                </div>
+                                <div className="p-6 bg-background rounded-xl border border-white/5 flex items-center gap-4 text-left hover:border-primary/20 transition-colors">
+                                    <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center text-yellow-500"><CheckCircle2 className="w-5 h-5" /></div>
+                                    <div>
+                                        <div className="font-bold">Completion Certificate</div>
+                                        <div className="text-xs text-muted-foreground">Display your achievement</div>
+                                    </div>
+                                </div>
+                                <div className="p-6 bg-background rounded-xl border border-white/5 flex items-center gap-4 text-left hover:border-primary/20 transition-colors">
+                                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500"><Lock className="w-5 h-5" /></div>
+                                    <div>
+                                        <div className="font-bold">Lifetime Access</div>
+                                        <div className="text-xs text-muted-foreground">Pay once, own forever</div>
                                     </div>
                                 </div>
                             </div>

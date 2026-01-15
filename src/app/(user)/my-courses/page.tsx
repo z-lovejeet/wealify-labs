@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PlayCircle, Loader2, BookOpen } from "lucide-react";
+import { Loader2, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,29 +19,34 @@ export default function MyCoursesPage() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // 1. Fetch Course Details
-            const { data: courseData } = await supabase
-                .from('courses')
-                .select('*')
-                .eq('id', COURSE_ID)
-                .single();
-
-            setCourse(courseData);
-
-            // 2. Check Enrollment
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data: enrollments } = await supabase
-                    .from('enrollments')
+            try {
+                // 1. Fetch Course Details
+                const { data: courseData } = await supabase
+                    .from('courses')
                     .select('*')
-                    .eq('user_id', user.id)
-                    .eq('course_id', COURSE_ID);
+                    .eq('id', COURSE_ID)
+                    .single();
 
-                if (enrollments && enrollments.length > 0) {
-                    setIsEnrolled(true);
+                setCourse(courseData);
+
+                // 2. Check Enrollment
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: enrollments } = await supabase
+                        .from('enrollments')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .eq('course_id', COURSE_ID);
+
+                    if (enrollments && enrollments.length > 0) {
+                        setIsEnrolled(true);
+                    }
                 }
+            } catch (error) {
+                console.error("My Courses Error:", error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchData();
     }, []);
@@ -50,7 +55,15 @@ export default function MyCoursesPage() {
         return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
-    if (!course) return null; // Or error state
+    if (!course) return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="p-4 bg-red-50 text-red-500 rounded-full mb-4">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+            <h2 className="text-xl font-bold">Loading Course...</h2>
+            <p className="text-muted-foreground">If this persists, please contact support.</p>
+        </div>
+    );
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -60,7 +73,7 @@ export default function MyCoursesPage() {
                 // Unenrolled State - Sales Focus
                 <Card key={course.id} className="hover:border-primary/50 transition-colors border-dashed border-2 overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-                        <div className="relative w-full aspect-video md:aspect-auto md:h-full bg-muted">
+                        <div className="relative w-full aspect-auto md:h-full bg-muted min-h-[200px]">
                             {course.thumbnail_url ? (
                                 <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full" />
                             ) : (
@@ -94,12 +107,12 @@ export default function MyCoursesPage() {
                 // Enrolled State - Learning Focus
                 <Card key={course.id} className="hover:border-primary/50 transition-colors overflow-hidden border border-border/50 shadow-lg">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
-                        <div className="md:col-span-2 relative w-full aspect-video md:aspect-auto md:h-full bg-muted">
+                        <div className="md:col-span-2 relative w-full aspect-auto md:h-full bg-muted min-h-[200px]">
                             {course.thumbnail_url ? (
                                 <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full" />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                    <PlayCircle className="w-16 h-16 text-white/80" />
+                                    <BookOpen className="w-16 h-16 text-white/80" />
                                 </div>
                             )}
                         </div>
@@ -130,7 +143,7 @@ export default function MyCoursesPage() {
 
                                 <Link href={`/learn/${course.id}`} className="block mt-8">
                                     <Button size="lg" className="w-full text-lg h-12 font-bold shadow-md shadow-primary/20">
-                                        Continue Learning <PlayCircle className="ml-2 w-5 h-5" />
+                                        Continue Learning <BookOpen className="ml-2 w-5 h-5" />
                                     </Button>
                                 </Link>
                             </CardContent>

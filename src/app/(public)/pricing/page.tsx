@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Zap, PlayCircle, FileText, Users, Loader2 } from "lucide-react";
+import { CheckCircle2, Zap, BookOpen, FileText, Users, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -97,11 +97,11 @@ export default function PricingPage() {
                             <div className="space-y-4">
                                 <div className="p-4 bg-card border border-border/50 rounded-xl flex gap-4">
                                     <div className="mt-1 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
-                                        <PlayCircle className="w-5 h-5" />
+                                        <BookOpen className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-lg">8 Core Video Modules</h4>
-                                        <p className="text-sm text-muted-foreground">Step-by-step HD video training covering mentality, strategy, and execution.</p>
+                                        <h4 className="font-bold text-lg">8 Core Learning Modules</h4>
+                                        <p className="text-sm text-muted-foreground">Step-by-step training covering mentality, strategy, and execution.</p>
                                     </div>
                                 </div>
                                 <div className="p-4 bg-card border border-border/50 rounded-xl flex gap-4">
@@ -160,11 +160,19 @@ export default function PricingPage() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                                        <span>Official Certificate of Completion</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
                                         <span>Free Lifetime Updates</span>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
                                         <span>Secure SSL Payment</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                                        <span>Lifetime Access to Course</span>
                                     </div>
                                 </div>
 

@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, PlayCircle, Lock, Menu, FileText, Download, ChevronLeft, ArrowLeft, ArrowRight } from "lucide-react";
+import { CheckCircle, Lock, Menu, FileText, Download, ChevronLeft, ArrowLeft, ArrowRight, BookOpen, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { createClient } from "@/lib/supabase/client";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -66,8 +68,6 @@ export default function CoursePlayerClient({ course, modules }: { course: any, m
                                         >
                                             {lesson.is_locked ? (
                                                 <Lock className="w-4 h-4 shrink-0" />
-                                            ) : lesson.lesson_type === 'video' ? (
-                                                <PlayCircle className="w-4 h-4 shrink-0" />
                                             ) : (
                                                 <FileText className="w-4 h-4 shrink-0" />
                                             )}
@@ -113,33 +113,22 @@ export default function CoursePlayerClient({ course, modules }: { course: any, m
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col overflow-y-auto">
                     {/* Player/Viewer */}
-                    <div className="aspect-video bg-black relative flex items-center justify-center">
-                        {currentLesson.lesson_type === 'video' ? (
-                            currentLesson.content ? (
-                                <video
-                                    className="w-full h-full"
-                                    controls
-                                    autoPlay={false}
-                                    key={currentLesson.content} // Force reload on change
-                                >
-                                    <source src={currentLesson.content} type="video/mp4" />
-                                    Your browser does not support the video tag.
-                                </video>
+                    {/* Player/Viewer */}
+                    <div className="min-h-[400px] bg-muted relative flex items-center justify-center">
+                        <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-8 text-center">
+                            <FileText className="w-16 h-16 mb-4 text-muted-foreground" />
+                            <h3 className="text-xl font-bold mb-2">{currentLesson.title}</h3>
+                            <p className="mb-4 text-muted-foreground">This is a text/document lesson.</p>
+                            {currentLesson.content ? (
+                                <Button onClick={handleDownload}>
+                                    <Download className="w-4 h-4 mr-2" /> Download/View Content
+                                </Button>
                             ) : (
-                                <div className="text-white/50">No video source provided</div>
-                            )
-                        ) : (
-                            <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-8 text-center">
-                                <FileText className="w-16 h-16 mb-4 text-muted-foreground" />
-                                <h3 className="text-xl font-bold mb-2">{currentLesson.title}</h3>
-                                <p className="mb-4 text-muted-foreground">This is a PDF/Document lesson.</p>
-                                {currentLesson.content && (
-                                    <Button onClick={handleDownload}>
-                                        <Download className="w-4 h-4 mr-2" /> Download/View PDF
-                                    </Button>
-                                )}
-                            </div>
-                        )}
+                                <Button disabled variant="outline">
+                                    <Lock className="w-4 h-4 mr-2" /> Content Locked or Unavailable
+                                </Button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Lesson Details */}

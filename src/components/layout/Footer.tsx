@@ -41,6 +41,7 @@ export function Footer() {
                                     alt="Wealify Labs"
                                     fill
                                     className="object-contain"
+                                    sizes="40px"
                                 />
                             </div>
                             <span className="font-black text-2xl tracking-tighter">Wealify Labs</span>

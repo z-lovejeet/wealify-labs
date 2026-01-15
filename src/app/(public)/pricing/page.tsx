@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Zap, BookOpen, FileText, Users, Loader2 } from "lucide-react";
+import { CheckCircle2, Zap, BookOpen, FileText, Users, Loader2, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -124,9 +124,17 @@ export default function PricingPage() {
                                 </div>
                             </div>
                         </div>
-
-
+                        <div className="p-4 bg-card border border-border/50 rounded-xl flex gap-4">
+                            <div className="mt-1 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+                                <TrendingUp className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-lg">7 Profitable Business Models</h4>
+                                <p className="text-sm text-muted-foreground">Detailed breakdowns of 7 distinct side hustles you can start immediately.</p>
+                            </div>
+                        </div>
                     </div>
+
 
                     {/* Right Column: Pricing Card */}
                     <motion.div
@@ -196,7 +204,7 @@ export default function PricingPage() {
                         </Card>
                     </motion.div>
                 </div>
-            </div>
+            </div >
         </div >
     );
 }

@@ -103,6 +103,7 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
                                     fill
                                     className="object-contain"
                                     priority
+                                    sizes="48px"
                                 />
                             </div>
                             <span className="font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
@@ -179,6 +180,7 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
                                                     fill
                                                     className="object-contain"
                                                     priority
+                                                    sizes="40px"
                                                 />
                                             </div>
                                             <span className="font-bold text-lg tracking-tight">

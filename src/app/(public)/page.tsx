@@ -359,6 +359,13 @@ export default function HomePage() {
                                         <div className="text-xs text-muted-foreground">Pay once, own forever</div>
                                     </div>
                                 </div>
+                                <div className="p-6 bg-background rounded-xl border border-white/5 flex items-center gap-4 text-left hover:border-primary/20 transition-colors">
+                                    <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-500"><TrendingUp className="w-5 h-5" /></div>
+                                    <div>
+                                        <div className="font-bold">7 Income Streams</div>
+                                        <div className="text-xs text-muted-foreground">Master 7 proven business models</div>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
 
@@ -409,10 +416,10 @@ export default function HomePage() {
                             </div>
                         </motion.div>
                     </div>
-                </div>
-            </section>
+                </div >
+            </section >
 
 
-        </div>
+        </div >
     );
 }

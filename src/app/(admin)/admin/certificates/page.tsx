@@ -16,23 +16,34 @@ export default function AdminCertificatesPage() {
 
         const fetchRequests = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('certificate_requests')
-                    .select(`
-                        *,
-                        courses (title)
-                    `)
-                    .order('created_at', { ascending: false });
+                // Timeout helper
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Certificates fetch timed out")), 15000)
+                );
 
-                if (error) {
-                    console.error("Supabase Error:", error);
-                    // Don't throw, just handle it
-                }
+                await Promise.race([
+                    (async () => {
+                        const { data, error } = await supabase
+                            .from('certificate_requests')
+                            .select(`
+                                *,
+                                courses (title)
+                            `)
+                            .order('created_at', { ascending: false });
 
-                if (mounted) {
-                    setRequests(data || []);
-                    setLoading(false);
-                }
+                        if (error) {
+                            console.error("Supabase Error:", error);
+                            // Don't throw, just handle it
+                        }
+
+                        if (mounted) {
+                            setRequests(data || []);
+                        }
+                    })(),
+                    timeoutPromise
+                ]);
+
+                if (mounted) setLoading(false);
             } catch (error) {
                 console.error("Fetch Error:", error);
                 if (mounted) setLoading(false);

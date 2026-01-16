@@ -21,32 +21,51 @@ export default function PricingPage() {
 
     useEffect(() => {
         const checkAuth = async () => {
-            // Fetch Course Details
-            const { data: courseData } = await supabase
-                .from('courses')
-                .select('*')
-                .eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
-                .single();
+            try {
+                // Timeout helper
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Auth check timed out")), 15000)
+                );
 
-            if (courseData) {
-                setCourse(courseData);
+                // Race between auth check and timeout
+                await Promise.race([
+                    (async () => {
+                        // Parallel fetch for speed
+                        const [courseResult, userResult] = await Promise.all([
+                            supabase.from('courses').select('*').eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11").single(),
+                            supabase.auth.getUser()
+                        ]);
+
+                        const courseData = courseResult.data;
+                        const user = userResult.data.user;
+
+                        if (courseData) {
+                            setCourse(courseData);
+                        }
+
+                        if (user) {
+                            setUser(user);
+                            if (courseData) {
+                                const { data: enrollments } = await supabase
+                                    .from('enrollments')
+                                    .select('id')
+                                    .eq('user_id', user.id)
+                                    .eq('course_id', courseData.id);
+
+                                if (enrollments && enrollments.length > 0) {
+                                    setHasAccess(true);
+                                }
+                            }
+                        }
+                    })(),
+                    timeoutPromise
+                ]);
+            } catch (error) {
+                console.error("Pricing Page Load Error:", error);
+                // Even on error, we stop loading so user can at least see "Buy Now" (which redirects to register)
+            } finally {
+                setLoading(false);
             }
-
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-
-            if (user && courseData) {
-                const { data: enrollments } = await supabase
-                    .from('enrollments')
-                    .select('id')
-                    .eq('user_id', user.id)
-                    .eq('course_id', courseData.id);
-
-                if (enrollments && enrollments.length > 0) {
-                    setHasAccess(true);
-                }
-            }
-            setLoading(false);
         };
         checkAuth();
     }, []);

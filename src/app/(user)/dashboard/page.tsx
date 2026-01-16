@@ -26,64 +26,74 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
+                // Timeout helper
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Dashboard data fetch timed out")), 15000)
+                );
 
-                // Parallel Fetch 1: Profile, Course, Enrollments
-                const [profileResult, courseResult, enrollmentResult] = await Promise.all([
-                    supabase.from('profiles').select('*').eq('id', user.id).single(),
-                    supabase.from('courses').select('*').eq('id', COURSE_ID).single(),
-                    supabase.from('enrollments').select('*').eq('user_id', user.id).eq('course_id', COURSE_ID)
-                ]);
+                await Promise.race([
+                    (async () => {
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user) return;
 
-                const profile = profileResult.data;
-                const courseData = courseResult.data;
-                const enrollments = enrollmentResult.data;
+                        // Parallel Fetch 1: Profile, Course, Enrollments
+                        const [profileResult, courseResult, enrollmentResult] = await Promise.all([
+                            supabase.from('profiles').select('*').eq('id', user.id).single(),
+                            supabase.from('courses').select('*').eq('id', COURSE_ID).single(),
+                            supabase.from('enrollments').select('*').eq('user_id', user.id).eq('course_id', COURSE_ID)
+                        ]);
 
-                setUser({ ...user, profile });
-                setCourse(courseData);
+                        const profile = profileResult.data;
+                        const courseData = courseResult.data;
+                        const enrollments = enrollmentResult.data;
 
-                const userIsEnrolled = enrollments && enrollments.length > 0;
-                setIsEnrolled(!!userIsEnrolled);
+                        setUser({ ...user, profile });
+                        setCourse(courseData);
 
-                let newStats = { totalLessons: 0, completedLessons: 0, progress: 0 };
+                        const userIsEnrolled = enrollments && enrollments.length > 0;
+                        setIsEnrolled(!!userIsEnrolled);
 
-                if (userIsEnrolled && courseData) {
-                    const { data: modules } = await supabase
-                        .from('modules')
-                        .select('id, lessons(id)')
-                        .eq('course_id', COURSE_ID);
+                        let newStats = { totalLessons: 0, completedLessons: 0, progress: 0 };
 
-                    let total = 0;
-                    let lessonIds: string[] = [];
+                        if (userIsEnrolled && courseData) {
+                            const { data: modules } = await supabase
+                                .from('modules')
+                                .select('id, lessons(id)')
+                                .eq('course_id', COURSE_ID);
 
-                    if (modules) {
-                        modules.forEach((m: any) => {
-                            if (m.lessons) {
-                                total += m.lessons.length;
-                                m.lessons.forEach((l: any) => lessonIds.push(l.id));
+                            let total = 0;
+                            let lessonIds: string[] = [];
+
+                            if (modules) {
+                                modules.forEach((m: any) => {
+                                    if (m.lessons) {
+                                        total += m.lessons.length;
+                                        m.lessons.forEach((l: any) => lessonIds.push(l.id));
+                                    }
+                                });
                             }
-                        });
-                    }
-                    newStats.totalLessons = total;
+                            newStats.totalLessons = total;
 
-                    if (lessonIds.length > 0) {
-                        const { count } = await supabase
-                            .from('lesson_progress')
-                            .select('*', { count: 'exact', head: true })
-                            .eq('user_id', user.id)
-                            .eq('is_completed', true)
-                            .in('lesson_id', lessonIds);
+                            if (lessonIds.length > 0) {
+                                const { count } = await supabase
+                                    .from('lesson_progress')
+                                    .select('*', { count: 'exact', head: true })
+                                    .eq('user_id', user.id)
+                                    .eq('is_completed', true)
+                                    .in('lesson_id', lessonIds);
 
-                        newStats.completedLessons = count || 0;
-                    }
+                                newStats.completedLessons = count || 0;
+                            }
 
-                    newStats.progress = newStats.totalLessons > 0
-                        ? Math.round((newStats.completedLessons / newStats.totalLessons) * 100)
-                        : 0;
-                }
+                            newStats.progress = newStats.totalLessons > 0
+                                ? Math.round((newStats.completedLessons / newStats.totalLessons) * 100)
+                                : 0;
+                        }
 
-                setStats(newStats);
+                        setStats(newStats);
+                    })(),
+                    timeoutPromise
+                ]);
             } catch (error) {
                 console.error("Dashboard Load Error:", error);
             } finally {

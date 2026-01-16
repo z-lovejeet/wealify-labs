@@ -16,22 +16,34 @@ export default function AdminReviewsPage() {
 
         const fetchReviews = async () => {
             try {
-                const { data, error } = await supabase
-                    .from('reviews')
-                    .select(`
-                        *,
-                        courses (title)
-                    `)
-                    .order('created_at', { ascending: false });
+                // Timeout helper
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Reviews fetch timed out")), 15000)
+                );
 
-                if (error) {
-                    console.error("Supabase Error:", error);
-                }
+                await Promise.race([
+                    (async () => {
+                        const { data, error } = await supabase
+                            .from('reviews')
+                            .select(`
+                                *,
+                                courses (title)
+                            `)
+                            .order('created_at', { ascending: false });
 
-                if (mounted) {
-                    setReviews(data || []);
-                    setLoading(false);
-                }
+                        if (error) {
+                            console.error("Supabase Error:", error);
+                            throw error;
+                        }
+
+                        if (mounted) {
+                            setReviews(data || []);
+                        }
+                    })(),
+                    timeoutPromise
+                ]);
+
+                if (mounted) setLoading(false);
             } catch (error) {
                 console.error("Fetch Error:", error);
                 if (mounted) setLoading(false);

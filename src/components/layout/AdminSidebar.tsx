@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 
 export const adminSidebarItems = [
     { title: "Dashboard", href: "/admin", icon: LayoutDashboard }, // Base admin path usually dashboard
-    { title: "Courses", href: "/admin/courses", icon: BookOpen },
     { title: "Users", href: "/admin/users", icon: Users },
     { title: "Orders", href: "/admin/orders", icon: ShoppingCart },
     { title: "Certificates", href: "/admin/certificates", icon: Award },

@@ -48,12 +48,11 @@ export default async function DashboardPage() {
         newStats.totalLessons = total;
 
         if (lessonIds.length > 0) {
-            // Count completed lessons for this user
+            // Count completed lessons for this user (using stored completion table)
             const { count } = await supabase
-                .from('lesson_progress')
+                .from('lesson_completions')
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', user.id)
-                .eq('is_completed', true)
                 .in('lesson_id', lessonIds);
 
             newStats.completedLessons = count || 0;

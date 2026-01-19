@@ -52,6 +52,22 @@ export default async function CoursePlayerPage({ params }: { params: Promise<{ c
         );
     }
 
+    // 2. Fetch User & Progress
+    const { data: { user } } = await supabase.auth.getUser();
+    let completedLessonIds: string[] = [];
+
+    if (user) {
+        const { data: completions } = await supabase
+            .from('lesson_completions')
+            .select('lesson_id')
+            .eq('user_id', user.id)
+            .eq('course_id', courseId);
+
+        if (completions) {
+            completedLessonIds = completions.map(c => c.lesson_id);
+        }
+    }
+
     // Sort valid data
     const sortedModules = course.modules?.sort((a: any, b: any) => a.order_index - b.order_index).map((m: any) => ({
         ...m,
@@ -59,5 +75,5 @@ export default async function CoursePlayerPage({ params }: { params: Promise<{ c
     })) || [];
 
     // Pass data to Client Component for interactivity
-    return <CoursePlayerClient course={course} modules={sortedModules} />;
+    return <CoursePlayerClient course={course} modules={sortedModules} initialCompletedLessonIds={completedLessonIds} userId={user?.id} />;
 }

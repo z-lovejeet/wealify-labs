@@ -12,7 +12,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { createClient } from "@/lib/supabase/client";
 import { CreditCard, LayoutDashboard, LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -36,7 +35,7 @@ interface UserNavProps {
 
 export function UserNav({ user }: UserNavProps) {
     const router = useRouter();
-    const supabase = createClient();
+
 
     // const handleSignOut = async () => {
     //     const { error } = await supabase.auth.signOut();

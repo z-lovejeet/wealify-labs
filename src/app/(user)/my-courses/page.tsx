@@ -1,69 +1,83 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen } from "lucide-react";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { BookOpen } from "lucide-react";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const COURSE_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
 
-export default function MyCoursesPage() {
-    const [loading, setLoading] = useState(true);
-    const [course, setCourse] = useState<any>(null);
-    const [isEnrolled, setIsEnrolled] = useState(false);
+export const dynamic = "force-dynamic";
 
-    const supabase = createClient();
+export default async function MyCoursesPage() {
+    const cookieStore = await cookies();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // 1. Fetch Course Details
-                const { data: courseData } = await supabase
-                    .from('courses')
-                    .select('*')
-                    .eq('id', COURSE_ID)
-                    .single();
-
-                setCourse(courseData);
-
-                // 2. Check Enrollment
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data: enrollments } = await supabase
-                        .from('enrollments')
-                        .select('*')
-                        .eq('user_id', user.id)
-                        .eq('course_id', COURSE_ID);
-
-                    if (enrollments && enrollments.length > 0) {
-                        setIsEnrolled(true);
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll();
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch {
+                        // Server Component setAll ignore
                     }
-                }
-            } catch (error) {
-                console.error("My Courses Error:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+                },
+            },
+        }
+    );
 
-    if (loading) {
-        return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    let course = null;
+    let isEnrolled = false;
+
+    // 1. Fetch Course Details
+    try {
+        const { data: courseData } = await supabase
+            .from('courses')
+            .select('*')
+            .eq('id', COURSE_ID)
+            .single();
+        course = courseData;
+    } catch (e) {
+        console.error("Error fetching course:", e);
     }
 
-    if (!course) return (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="p-4 bg-red-50 text-red-500 rounded-full mb-4">
-                <Loader2 className="w-8 h-8 animate-spin" />
+    // 2. Check Enrollment
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data: enrollments } = await supabase
+                .from('enrollments')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('course_id', COURSE_ID);
+
+            if (enrollments && enrollments.length > 0) {
+                isEnrolled = true;
+            }
+        }
+    } catch (e) {
+        console.error("Error checking enrollment:", e);
+    }
+
+    if (!course) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="p-4 bg-red-50 text-red-500 rounded-full mb-4">
+                    <BookOpen className="w-8 h-8" />
+                </div>
+                <h2 className="text-xl font-bold">Course Not Found</h2>
+                <p className="text-muted-foreground">Unable to load course details. Please try again later.</p>
             </div>
-            <h2 className="text-xl font-bold">Loading Course...</h2>
-            <p className="text-muted-foreground">If this persists, please contact support.</p>
-        </div>
-    );
+        );
+    }
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -71,7 +85,7 @@ export default function MyCoursesPage() {
 
             {!isEnrolled ? (
                 // Unenrolled State - Sales Focus
-                <Card key={course.id} className="hover:border-primary/50 transition-colors border-dashed border-2 overflow-hidden">
+                <Card className="hover:border-primary/50 transition-colors border-dashed border-2 overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                         <div className="relative w-full aspect-auto md:h-full bg-muted min-h-[200px]">
                             {course.thumbnail_url ? (
@@ -105,7 +119,7 @@ export default function MyCoursesPage() {
                 </Card>
             ) : (
                 // Enrolled State - Learning Focus
-                <Card key={course.id} className="hover:border-primary/50 transition-colors overflow-hidden border border-border/50 shadow-lg">
+                <Card className="hover:border-primary/50 transition-colors overflow-hidden border border-border/50 shadow-lg">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
                         <div className="md:col-span-2 relative w-full aspect-auto md:h-full bg-muted min-h-[200px]">
                             {course.thumbnail_url ? (
@@ -154,3 +168,4 @@ export default function MyCoursesPage() {
         </div>
     );
 }
+

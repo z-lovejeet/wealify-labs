@@ -4,11 +4,12 @@ import AdminUsersClient from "@/components/admin/AdminUsersClient";
 export default async function AdminUsersPage({
     searchParams,
 }: {
-    searchParams?: { [key: string]: string | undefined };
+    searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
+    const { page: pageParam } = await searchParams;
     const supabase = await createClient();
 
-    const page = searchParams?.page ? parseInt(searchParams.page) : 1;
+    const page = pageParam ? parseInt(pageParam) : 1;
     const limit = 20;
     const start = (page - 1) * limit;
     const end = start + limit - 1;

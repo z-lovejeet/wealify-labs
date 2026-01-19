@@ -12,20 +12,20 @@ export default async function PublicLayout({
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Parallel Fetching
+    const [profileResult, settingsResult] = await Promise.all([
+        user ? supabase.from('profiles').select('*').eq('id', user.id).single() : Promise.resolve({ data: null }),
+        supabase.from('platform_settings').select('*').eq('key', 'site_name').single()
+    ]);
+
     let userWithProfile = null;
     if (user) {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-        userWithProfile = { ...user, profile };
+        userWithProfile = { ...user, profile: profileResult.data };
     }
 
     let siteName = "Wealify Labs";
-    const { data: settings } = await supabase.from('platform_settings').select('*').eq('key', 'site_name').single();
-    if (settings) {
-        siteName = settings.value;
+    if (settingsResult.data) {
+        siteName = settingsResult.data.value;
     }
 
     return (

@@ -179,7 +179,6 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
                                                     alt={siteName}
                                                     fill
                                                     className="object-contain"
-                                                    priority
                                                     sizes="40px"
                                                 />
                                             </div>

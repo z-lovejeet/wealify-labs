@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Lock, Menu, FileText, Download, ChevronLeft, ArrowLeft, ArrowRight, BookOpen, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { createClient } from "@/lib/supabase/client";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
@@ -191,6 +191,10 @@ export default function CoursePlayerClient({
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="p-0 w-80">
+                            <SheetTitle className="sr-only">Course Content</SheetTitle>
+                            <SheetDescription className="sr-only">
+                                Navigate through the course modules and lessons.
+                            </SheetDescription>
                             <SidebarContent />
                         </SheetContent>
                     </Sheet>

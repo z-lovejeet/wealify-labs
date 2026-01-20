@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, Award, Clock, BookOpen, Star, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface DashboardClientProps {
@@ -22,6 +22,11 @@ interface DashboardClientProps {
 export default function DashboardClient({ user, course, isEnrolled, stats }: DashboardClientProps) {
     const supabase = createClient();
 
+    // Certificate Request State (Synced)
+    const [certRequests, setCertRequests] = useState<any[]>([]);
+    const [userReview, setUserReview] = useState<any>(null);
+    const [isLoadingCert, setIsLoadingCert] = useState(true);
+
     // State for modals
     const [isCertModalOpen, setIsCertModalOpen] = useState(false);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -37,16 +42,72 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
     const [reviewFeedback, setReviewFeedback] = useState("");
     const [reviewStatus, setReviewStatus] = useState<"idle" | "submitting" | "success">("idle");
 
+    // Fetch Requests & Subscribe
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchData = async () => {
+            const { data, error } = await supabase
+                .rpc('get_user_dashboard_data', {
+                    target_course_id: course.id
+                });
+
+            if (data) {
+                // The RPC returns { cert_requests: [...], review: ... }
+                // We need to type cast or just use it since it's JSON
+                const result = data as any;
+                if (result.cert_requests) setCertRequests(result.cert_requests);
+                if (result.review) setUserReview(result.review);
+            } else if (error) {
+                console.error("Dashboard RPC Fetch Error:", error);
+            }
+
+            setIsLoadingCert(false);
+        };
+
+        fetchData();
+
+        const channel = supabase
+            .channel('dashboard_updates')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'certificate_requests',
+                filter: `user_id=eq.${user.id}`
+            }, () => {
+                fetchData();
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'reviews',
+                filter: `user_id=eq.${user.id}`
+            }, () => {
+                fetchData();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, course.id, supabase]);
+
     const handleRequestCertificate = async () => {
         setCertStatus("submitting");
         try {
-            const { error } = await supabase.from('certificate_requests').insert({
+            const { data, error } = await supabase.from('certificate_requests').insert({
                 user_id: user.id,
                 course_id: course.id,
                 full_name: certName,
-                email: certEmail
-            });
+                email: certEmail,
+                status: 'pending'
+            }).select().single();
+
             if (error) throw error;
+
+            // Instant UI Update
+            setCertRequests(prev => [data, ...prev]);
+
             setCertStatus("success");
         } catch (error) {
             console.error(error);
@@ -58,14 +119,19 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
     const handleSubmitReview = async () => {
         setReviewStatus("submitting");
         try {
-            const { error } = await supabase.from('reviews').insert({
+            const { data, error } = await supabase.from('reviews').insert({
                 user_id: user.id,
                 course_id: course.id,
                 student_name: reviewName,
                 student_country: reviewCountry,
                 feedback: reviewFeedback
-            });
+            }).select().single();
+
             if (error) throw error;
+
+            // Instant UI Update
+            setUserReview(data);
+
             setReviewStatus("success");
         } catch (error) {
             console.error(error);
@@ -76,6 +142,13 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
 
     const firstName = user?.profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Member";
     const isCompleted = stats.progress === 100;
+
+    // Derived State for Certificate Button
+    const rejectedCount = certRequests.filter(r => r.status === 'rejected').length;
+    const latestRequest = certRequests[0];
+    const isBlocked = rejectedCount >= 3;
+    const isPending = latestRequest?.status === 'pending';
+    const isApproved = latestRequest?.status === 'approved';
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 relative">
@@ -113,7 +186,7 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
                         <Award className="h-4 w-4 text-yellow-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">0</div>
+                        <div className="text-2xl font-bold">{isApproved ? 1 : 0}</div>
                         <p className="text-xs text-muted-foreground mt-1">Earn upon 100% completion</p>
                     </CardContent>
                 </Card>
@@ -121,22 +194,61 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-4">
-                <Button
-                    className="gap-2"
-                    variant={isCompleted ? "default" : "outline"}
-                    disabled={!isCompleted}
-                    onClick={() => setIsCertModalOpen(true)}
-                >
-                    <Award className="w-4 h-4" /> Request Certificate {(!isCompleted) && "(Locked)"}
-                </Button>
-                <Button
-                    className="gap-2"
-                    variant={isCompleted ? "secondary" : "outline"}
-                    disabled={!isCompleted}
-                    onClick={() => setIsReviewModalOpen(true)}
-                >
-                    <Star className="w-4 h-4" /> Write Review {(!isCompleted) && "(Locked)"}
-                </Button>
+                {(() => {
+                    if (isApproved) {
+                        return (
+                            <Button className="gap-2 bg-green-600/10 text-green-600 hover:bg-green-600/20 border-green-600/20 border cursor-default" variant="outline">
+                                <CheckCircle className="w-4 h-4" /> Certificate Approved - Will be emailed within 24hrs
+                            </Button>
+                        )
+                    }
+                    if (isPending) {
+                        return (
+                            <Button className="gap-2" variant="secondary" disabled>
+                                <Clock className="w-4 h-4" /> Request Pending
+                            </Button>
+                        )
+                    }
+                    if (isBlocked) {
+                        return (
+                            <Button className="gap-2" variant="destructive" disabled>
+                                <Award className="w-4 h-4" /> Request Limit Reached
+                            </Button>
+                        )
+                    }
+
+                    return (
+                        <Button
+                            className="gap-2"
+                            variant={isCompleted ? "default" : "outline"}
+                            disabled={!isCompleted || isLoadingCert}
+                            onClick={() => setIsCertModalOpen(true)}
+                        >
+                            <Award className="w-4 h-4" />
+                            {rejectedCount > 0 ? `Retry Request (${3 - rejectedCount} left)` : "Request Certificate"}
+                            {!isCompleted && " (Locked)"}
+                        </Button>
+                    );
+                })()}
+
+                {userReview ? (
+                    <Button
+                        className="gap-2"
+                        variant="secondary"
+                        disabled
+                    >
+                        <Star className="w-4 h-4" /> Review Submitted
+                    </Button>
+                ) : (
+                    <Button
+                        className="gap-2"
+                        variant={isCompleted ? "secondary" : "outline"}
+                        disabled={!isCompleted}
+                        onClick={() => setIsReviewModalOpen(true)}
+                    >
+                        <Star className="w-4 h-4" /> Write Review {(!isCompleted) && "(Locked)"}
+                    </Button>
+                )}
             </div>
 
             <div className="space-y-6">

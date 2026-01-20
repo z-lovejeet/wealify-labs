@@ -34,37 +34,46 @@ export default async function MyCoursesPage() {
         }
     );
 
-    let course = null;
+    // 1. Parallel Fetch: Course details, Modules (for total lesson count), and User Session
+    const [courseResult, modulesResult, userResult] = await Promise.all([
+        supabase.from('courses').select('*').eq('id', COURSE_ID).single(),
+        supabase.from('modules').select('id, lessons(id)').eq('course_id', COURSE_ID),
+        supabase.auth.getUser()
+    ]);
+
+    const course = courseResult.data;
+    const user = userResult.data.user;
+
     let isEnrolled = false;
+    let progressPercentage = 0;
 
-    // 1. Fetch Course Details
-    try {
-        const { data: courseData } = await supabase
-            .from('courses')
-            .select('*')
-            .eq('id', COURSE_ID)
-            .single();
-        course = courseData;
-    } catch (e) {
-        console.error("Error fetching course:", e);
-    }
+    // 2. Parallel Fetch: User-specific data (if logged in)
+    if (user && course) {
+        const [enrollmentResult, completionsResult] = await Promise.all([
+            supabase.from('enrollments').select('id').eq('user_id', user.id).eq('course_id', COURSE_ID),
+            supabase.from('lesson_completions').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('course_id', COURSE_ID)
+        ]);
 
-    // 2. Check Enrollment
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data: enrollments } = await supabase
-                .from('enrollments')
-                .select('id')
-                .eq('user_id', user.id)
-                .eq('course_id', COURSE_ID);
-
-            if (enrollments && enrollments.length > 0) {
-                isEnrolled = true;
-            }
+        const enrollments = enrollmentResult.data;
+        if (enrollments && enrollments.length > 0) {
+            isEnrolled = true;
         }
-    } catch (e) {
-        console.error("Error checking enrollment:", e);
+
+        // Calculate Progress
+        let totalLessons = 0;
+        if (modulesResult.data) {
+            modulesResult.data.forEach((m: any) => {
+                if (m.lessons) {
+                    totalLessons += m.lessons.length;
+                }
+            });
+        }
+
+        const completedCount = completionsResult.count || 0;
+
+        if (totalLessons > 0) {
+            progressPercentage = Math.round((completedCount / totalLessons) * 100);
+        }
     }
 
     if (!course) {
@@ -149,9 +158,9 @@ export default async function MyCoursesPage() {
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-sm font-medium">
                                             <span>Your Progress</span>
-                                            <span className="text-primary">0%</span>
+                                            <span className="text-primary">{progressPercentage}%</span>
                                         </div>
-                                        <Progress value={0} className="h-3" />
+                                        <Progress value={progressPercentage} className="h-3" />
                                     </div>
                                 </div>
 
@@ -168,4 +177,3 @@ export default async function MyCoursesPage() {
         </div>
     );
 }
-

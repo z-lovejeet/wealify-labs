@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { getSignedUrl } from "@/actions/storage";
 
 export default function CoursePlayerClient({
     course,
@@ -28,6 +29,79 @@ export default function CoursePlayerClient({
     const allLessons = modules.flatMap(m => m.lessons.map((l: any) => ({ ...l, moduleTitle: m.title })));
     const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
     const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set(initialCompletedLessonIds));
+
+    // Certificate Logic
+    const [certRequests, setCertRequests] = useState<any[]>([]);
+    const [isLoadingCert, setIsLoadingCert] = useState(true);
+    const [isRequestingCert, setIsRequestingCert] = useState(false);
+
+    useEffect(() => {
+        if (!userId) return;
+
+        const fetchData = async () => {
+            const { data, error } = await supabase
+                .rpc('get_user_dashboard_data', {
+                    target_course_id: course.id
+                });
+
+            if (data) {
+                const result = data as any;
+                if (result.cert_requests) setCertRequests(result.cert_requests);
+            } else if (error) {
+                console.error("CoursePlayer RPC Fetch Error:", error);
+            }
+            setIsLoadingCert(false);
+        };
+
+        fetchData();
+
+        // Realtime subscription
+        const channel = supabase
+            .channel('cert_status')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'certificate_requests',
+                filter: `user_id=eq.${userId}`
+            }, (payload: any) => {
+                fetchData(); // Refresh on any change
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId, course.id, supabase]);
+
+    const handleRequestCertificate = async () => {
+        if (!userId) return;
+        setIsRequestingCert(true);
+
+        try {
+            // Get user profile for name/email
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
+
+            const { data, error } = await supabase.from('certificate_requests').insert({
+                user_id: userId,
+                course_id: course.id,
+                full_name: profile?.full_name || user?.user_metadata?.full_name || 'Student',
+                email: user?.email,
+                status: 'pending'
+            }).select().single();
+
+            if (error) throw error;
+
+            // Instant UI Update
+            setCertRequests(prev => [data, ...prev]);
+
+        } catch (error: any) {
+            console.error("Cert request failed:", error);
+            alert("Failed to request certificate. Please try again.");
+        } finally {
+            setIsRequestingCert(false);
+        }
+    };
 
     const currentLesson = allLessons[currentLessonIndex];
     if (!currentLesson) return <div className="p-8">No lessons available.</div>;
@@ -93,17 +167,35 @@ export default function CoursePlayerClient({
         }
     };
 
-    const handleDownload = () => {
-        if (currentLesson.content) {
-            window.open(currentLesson.content, '_blank');
-            // Auto mark as completed
-            if (!completedLessons.has(currentLesson.id)) {
-                toggleCompletion(currentLesson.id, true);
+    const handleDownload = async () => {
+        if (!currentLesson.content) return;
+
+        let downloadUrl = currentLesson.content;
+
+        // Check if it's a storage path (not a full URL)
+        if (!currentLesson.content.startsWith('http')) {
+            try {
+                // Remove leading slash if present
+                const path = currentLesson.content.startsWith('/') ? currentLesson.content.substring(1) : currentLesson.content;
+
+                const signedUrl = await getSignedUrl(path);
+                downloadUrl = signedUrl;
+            } catch (err: any) {
+                console.error("Signing failed:", err);
+                alert(err.message || "Could not access private file.");
+                return;
             }
+        }
+
+        window.open(downloadUrl, '_blank');
+
+        // Auto mark as completed
+        if (!completedLessons.has(currentLesson.id)) {
+            toggleCompletion(currentLesson.id, true);
         }
     }
 
-    const SidebarContent = () => (
+    const renderSidebar = () => (
         <div className="h-full flex flex-col">
             <div className="p-4 border-b bg-card">
                 <h2 className="font-bold text-lg mb-1">Course Content</h2>
@@ -195,7 +287,7 @@ export default function CoursePlayerClient({
                             <SheetDescription className="sr-only">
                                 Navigate through the course modules and lessons.
                             </SheetDescription>
-                            <SidebarContent />
+                            {renderSidebar()}
                         </SheetContent>
                     </Sheet>
                 </div>
@@ -204,54 +296,177 @@ export default function CoursePlayerClient({
             <div className="flex flex-1 overflow-hidden">
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col overflow-y-auto">
-                    {/* Player/Viewer */}
-                    <div className="min-h-[400px] bg-muted relative flex items-center justify-center">
-                        <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-8 text-center">
-                            <FileText className="w-16 h-16 mb-4 text-muted-foreground" />
-                            <h3 className="text-xl font-bold mb-2">{currentLesson.title}</h3>
-                            <p className="mb-4 text-muted-foreground">This is a text/document lesson.</p>
-                            {currentLesson.content ? (
-                                <Button onClick={handleDownload}>
-                                    <Download className="w-4 h-4 mr-2" /> Download/View Content
-                                </Button>
-                            ) : (
-                                <Button disabled variant="outline">
-                                    <Lock className="w-4 h-4 mr-2" /> Content Locked or Unavailable
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+                    {currentLesson.title === "Thank You Message" ? (
+                        // Dedicated Full-Page Thank You Layout
+                        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-muted/30">
+                            <div className="max-w-2xl w-full mx-auto space-y-8 text-center bg-card p-10 rounded-xl shadow-sm border">
+                                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto animate-in zoom-in duration-500">
+                                    <CheckCircle className="w-12 h-12 text-primary" />
+                                </div>
 
-                    {/* Lesson Details */}
-                    <div className="p-6 md:p-8 max-w-4xl mx-auto w-full space-y-8">
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h1 className="text-2xl md:text-3xl font-bold">{currentLesson.title}</h1>
+                                <div className="space-y-4">
+                                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+                                        Congratulations!
+                                    </h2>
+                                    <p className="text-xl text-muted-foreground font-medium">
+                                        You've completed the course.
+                                    </p>
+                                </div>
 
-                                {currentLesson.content && (
-                                    <Button variant="outline" size="sm" onClick={handleDownload} title="Download Source">
-                                        <Download className="w-4 h-4 mr-2" /> Download
+                                <Separator className="my-8" />
+
+                                <div className="prose prose-lg dark:prose-invert mx-auto text-muted-foreground leading-relaxed">
+                                    <p>
+                                        You've taken a massive step toward building your digital future.
+                                        We are incredibly proud of your dedication and commitment.
+                                    </p>
+                                    <p>
+                                        Remember, knowledge is only potential power—execution is everything.
+                                        Take what you've learned here, apply it consistently, and don't be afraid to experiment.
+                                    </p>
+                                    <p className="font-semibold text-foreground text-lg pt-2">
+                                        Welcome to the top 1%. Your journey has just begun.
+                                    </p>
+                                </div>
+
+                                <div className="pt-8 flex flex-col items-center gap-4">
+                                    <div className="w-full max-w-sm">
+                                        {(() => {
+                                            const rejectedCount = certRequests.filter(r => r.status === 'rejected').length;
+                                            const latestRequest = certRequests[0];
+                                            const isBlocked = rejectedCount >= 3;
+
+                                            // 1. Approved
+                                            if (latestRequest?.status === 'approved') {
+                                                return (
+                                                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-center space-y-3">
+                                                        <p className="text-green-600 font-semibold flex items-center justify-center gap-2">
+                                                            <CheckCircle className="w-5 h-5" /> Certificate Approved!
+                                                        </p>
+                                                        <p className="text-sm text-green-700">
+                                                            Your certificate will be delivered to you within 24hrs via your email.
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+
+                                            // 2. Pending
+                                            if (latestRequest?.status === 'pending') {
+                                                return (
+                                                    <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-center">
+                                                        <p className="text-yellow-600 font-medium flex items-center justify-center gap-2">
+                                                            <Loader2 className="w-4 h-4 animate-spin" /> Certificate Request Pending
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                            Admin will review your request shortly.
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+
+                                            // 3. Blocked
+                                            if (isBlocked) {
+                                                return (
+                                                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-center">
+                                                        <p className="text-red-600 font-semibold flex items-center justify-center gap-2">
+                                                            <Lock className="w-5 h-5" /> Request Limit Reached
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                            You have exceeded the maximum number of rejected requests (3).
+                                                            Please contact support.
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+
+                                            // 4. Default / Retry
+                                            return (
+                                                <div className="space-y-3">
+                                                    {rejectedCount > 0 && (
+                                                        <p className="text-sm text-red-500 font-medium">
+                                                            Previous request rejected. Attempts remaining: {3 - rejectedCount}
+                                                        </p>
+                                                    )}
+                                                    <Button
+                                                        size="lg"
+                                                        className="w-full font-semibold text-md shadow-lg shadow-primary/20"
+                                                        onClick={handleRequestCertificate}
+                                                        disabled={isRequestingCert || isLoadingCert}
+                                                    >
+                                                        {isRequestingCert ? (
+                                                            <>
+                                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Requesting...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                Request Certificate
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <Button variant="ghost" size="sm" onClick={() => window.location.href = '/dashboard'}>
+                                        Return to Dashboard
                                     </Button>
-                                )}
+                                </div>
                             </div>
                         </div>
+                    ) : (
+                        // Standard Lesson Layout (Player + Details)
+                        <>
+                            {/* Player/Viewer */}
+                            <div className="min-h-[400px] bg-muted relative flex items-center justify-center">
+                                <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-8 text-center">
+                                    <FileText className="w-16 h-16 mb-4 text-muted-foreground" />
+                                    <h3 className="text-xl font-bold mb-2">{currentLesson.title}</h3>
+                                    <p className="mb-4 text-muted-foreground">This is a text/document lesson.</p>
+                                    {currentLesson.content ? (
+                                        <Button onClick={handleDownload}>
+                                            <Download className="w-4 h-4 mr-2" /> Download/View Content
+                                        </Button>
+                                    ) : (
+                                        <Button disabled variant="outline">
+                                            <Lock className="w-4 h-4 mr-2" /> Content Locked or Unavailable
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
 
-                        <Separator />
+                            {/* Lesson Details */}
+                            <div className="p-6 md:p-8 max-w-4xl mx-auto w-full space-y-8">
+                                <div>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h1 className="text-2xl md:text-3xl font-bold">{currentLesson.title}</h1>
 
-                        <div className="flex items-center justify-between pt-4">
-                            <Button variant="outline" onClick={handlePrev} disabled={currentLessonIndex === 0}>
-                                <ArrowLeft className="w-4 h-4 mr-2" /> Previous
-                            </Button>
-                            <Button onClick={handleNext} disabled={currentLessonIndex === allLessons.length - 1}>
-                                Next <ArrowRight className="w-4 h-4 ml-2" />
-                            </Button>
-                        </div>
-                    </div>
+                                        {currentLesson.content && (
+                                            <Button variant="outline" size="sm" onClick={handleDownload} title="Download Source">
+                                                <Download className="w-4 h-4 mr-2" /> Download
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div className="flex items-center justify-between pt-4">
+                                    <Button variant="outline" onClick={handlePrev} disabled={currentLessonIndex === 0}>
+                                        <ArrowLeft className="w-4 h-4 mr-2" /> Previous
+                                    </Button>
+                                    <Button onClick={handleNext} disabled={currentLessonIndex === allLessons.length - 1}>
+                                        Next <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Sidebar */}
                 <div className="hidden lg:block w-80 border-l bg-card/30">
-                    <SidebarContent />
+                    {renderSidebar()}
                 </div>
             </div>
         </div>

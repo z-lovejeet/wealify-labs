@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wealify Labs - Premium Online Courses",
-  description: "Master new skills with our premium courses.",
+  title: "The Modern Side Hustle Blueprint | Wealify Labs",
+  description: "Master the art of digital wealth. A comprehensive framework for building sustainable income streams in 2026.",
 };
 
 export default function RootLayout({

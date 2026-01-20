@@ -93,8 +93,10 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
     }, [user, course.id, supabase]);
 
     const handleRequestCertificate = async () => {
+        console.log("DEBUG: Cert Request Start");
         setCertStatus("submitting");
         try {
+            console.log("DEBUG: Inserting Cert Request...", { user_id: user.id, course_id: course.id });
             const { data, error } = await supabase.from('certificate_requests').insert({
                 user_id: user.id,
                 course_id: course.id,
@@ -103,6 +105,8 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
                 status: 'pending'
             }).select().single();
 
+            console.log("DEBUG: Cert Insert Response", { data, error });
+
             if (error) throw error;
 
             // Instant UI Update
@@ -110,15 +114,17 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
 
             setCertStatus("success");
         } catch (error) {
-            console.error(error);
+            console.error("DEBUG: Cert Request Error:", error);
             setCertStatus("idle");
-            alert("Failed to submit request.");
+            alert("Failed to submit request: " + JSON.stringify(error));
         }
     };
 
     const handleSubmitReview = async () => {
+        console.log("DEBUG: Review Submit Start");
         setReviewStatus("submitting");
         try {
+            console.log("DEBUG: Inserting Review...", { user_id: user.id, course_id: course.id });
             const { data, error } = await supabase.from('reviews').insert({
                 user_id: user.id,
                 course_id: course.id,
@@ -127,6 +133,8 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
                 feedback: reviewFeedback
             }).select().single();
 
+            console.log("DEBUG: Review Insert Response", { data, error });
+
             if (error) throw error;
 
             // Instant UI Update
@@ -134,9 +142,9 @@ export default function DashboardClient({ user, course, isEnrolled, stats }: Das
 
             setReviewStatus("success");
         } catch (error) {
-            console.error(error);
+            console.error("DEBUG: Review Submit Error:", error);
             setReviewStatus("idle");
-            alert("Failed to submit review.");
+            alert("Failed to submit review: " + JSON.stringify(error));
         }
     };
 

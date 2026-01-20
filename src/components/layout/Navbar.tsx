@@ -60,7 +60,7 @@ export function Navbar({ initialUser, siteName: initialSiteName = "Wealify Labs"
         window.addEventListener("scroll", handleScroll);
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: any) => {
             if (session?.user) {
                 // Fetch profile to get role
                 const { data: profile } = await supabase

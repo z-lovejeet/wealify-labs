@@ -13,18 +13,23 @@ import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getSignedUrl } from "@/actions/storage";
 
+// Assuming CoursePlayerClientProps is defined elsewhere or will be defined.
+// For now, I'll infer the types based on the new props.
+interface CoursePlayerClientProps {
+    course: any;
+    modules: any[]; // Kept as 'modules' to match usages
+    initialCompletedLessonIds?: string[];
+    userId?: string;
+}
+
 export default function CoursePlayerClient({
     course,
     modules,
     initialCompletedLessonIds = [],
     userId
-}: {
-    course: any,
-    modules: any[],
-    initialCompletedLessonIds?: string[],
-    userId?: string
-}) {
-    const supabase = createClient();
+}: CoursePlayerClientProps) {
+    // Use state to keep the client stable across renders
+    const [supabase] = useState(() => createClient());
     // Flatten lessons to make navigation easier
     const allLessons = modules.flatMap(m => m.lessons.map((l: any) => ({ ...l, moduleTitle: m.title })));
     const [currentLessonIndex, setCurrentLessonIndex] = useState(0);

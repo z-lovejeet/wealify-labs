@@ -20,7 +20,8 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ user, course, isEnrolled, stats }: DashboardClientProps) {
-    const supabase = createClient();
+    // Use state to keep the client stable across renders (prevents infinite loop & AbortError)
+    const [supabase] = useState(() => createClient());
 
     // Certificate Request State (Synced)
     const [certRequests, setCertRequests] = useState<any[]>([]);

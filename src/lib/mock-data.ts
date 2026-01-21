@@ -4,7 +4,7 @@ export const siteConfig = {
     name: "The Modern Side Hustle Blueprint",
     description: "Build a profitable side hustle in 30 days.",
     instructor: "Alex Hustle",
-    price: 14.99,
+    price: 0.1,
     originalPrice: 29.99,
 };
 
@@ -13,7 +13,7 @@ export const singleCourse = {
     title: "The Modern Side Hustle Blueprint",
     slug: "modern-side-hustle-blueprint",
     description: "A comprehensive step-by-step guide to finding, validating, and launching a profitable side hustle while working a 9-5 job. No fluff, just actionable strategies.",
-    price: 14.99,
+    price: 0.1,
     originalPrice: 29.99,
     instructor: "Alex Hustle",
     rating: 4.9,

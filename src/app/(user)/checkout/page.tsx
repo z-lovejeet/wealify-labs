@@ -49,6 +49,7 @@ export default async function CheckoutPage() {
 
         if (routeCourse) {
             course = routeCourse;
+            course.price = 0.1; // TEST MODE
         }
     } catch (e) {
         // Ignore error

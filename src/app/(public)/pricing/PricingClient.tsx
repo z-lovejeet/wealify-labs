@@ -72,7 +72,15 @@ export default function PricingClient({ user, hasAccess, course }: PricingClient
                         </div>
                         <div className="flex items-center gap-3">
                             <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                            <span>Free Lifetime Updates</span>
+                            <span>24/7 Priority Support</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                            <span>Exclusive Community Access</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                            <span>Proven Strategies & Blueprints</span>
                         </div>
                         <div className="flex items-center gap-3">
                             <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />

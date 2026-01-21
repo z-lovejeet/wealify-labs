@@ -48,6 +48,7 @@ export default async function PricingPage() {
 
         if (routeCourse) {
             course = routeCourse;
+            course.price = 0.1; // TEST MODE
         }
     } catch (e) {
         console.error("Error fetching course:", e);

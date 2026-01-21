@@ -69,11 +69,14 @@ export default function PrivacyPage() {
                         <p className="text-muted-foreground leading-relaxed">
                             If you have questions or comments about this policy, you may email us at privacy@wealifylabs.com or by post to:
                         </p>
-                        <address className="not-italic text-muted-foreground mt-4 border-l-2 border-primary pl-4">
-                            Wealify Labs Inc.<br />
-                            123 Innovation Dr<br />
-                            Tech City, TC 94043
-                        </address>
+                        <div className="mt-8">
+                            <a
+                                href="/contact"
+                                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                            >
+                                Contact Support
+                            </a>
+                        </div>
                     </section>
                 </div>
             </div>

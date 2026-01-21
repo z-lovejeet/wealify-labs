@@ -12,6 +12,8 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from 
 import { cn } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getSignedUrl } from "@/actions/storage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // Assuming CoursePlayerClientProps is defined elsewhere or will be defined.
 // For now, I'll infer the types based on the new props.
@@ -39,6 +41,41 @@ export default function CoursePlayerClient({
     const [certRequests, setCertRequests] = useState<any[]>([]);
     const [isLoadingCert, setIsLoadingCert] = useState(true);
     const [isRequestingCert, setIsRequestingCert] = useState(false);
+
+    // Thank You Modal Logic
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const [showThankYou, setShowThankYou] = useState(false);
+
+    useEffect(() => {
+        if (searchParams?.get("success") === "true") {
+            setShowThankYou(true);
+            // Fire confetti
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+            const interval: any = setInterval(function () {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+
+                // Fallback if confetti is not available, but usually safe to assume or just skip if complex. 
+                // Since I cannot install packages, I will simulate without the actual confetti package import if it's not there.
+                // Wait, I don't see canvas-confetti in package.json from file list, so I'll skip the confetti import and logic to avoid build errors.
+                // I will just show the modal.
+            }, 250);
+
+            // Clean URL
+            router.replace(`/learn/${course.id}`, { scroll: false });
+        }
+    }, [searchParams, course.id, router]);
 
     useEffect(() => {
         if (!userId) return;
@@ -474,6 +511,29 @@ export default function CoursePlayerClient({
                     {renderSidebar()}
                 </div>
             </div>
+            {/* Thank You / Welcome Modal */}
+            <Dialog open={showThankYou} onOpenChange={setShowThankYou}>
+                <DialogContent className="sm:max-w-md text-center">
+                    <DialogHeader>
+                        <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary animate-in zoom-in duration-300">
+                            <CheckCircle className="w-8 h-8" />
+                        </div>
+                        <DialogTitle className="text-2xl font-bold text-center">Welcome Aboard!</DialogTitle>
+                        <DialogDescription className="text-center pt-2">
+                            Payment successful. You now have lifetime access to <strong>{course.title}</strong>.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                        <p className="text-sm text-muted-foreground">
+                            We are excited to help you start your journey.
+                            Click below to start your first lesson.
+                        </p>
+                        <Button className="w-full" size="lg" onClick={() => setShowThankYou(false)}>
+                            Start Learning Now
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

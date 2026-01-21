@@ -189,7 +189,7 @@ export default function CheckoutClient({ user, course }: CheckoutClientProps) {
                                                             const result = await response.json();
                                                             if (result.success) {
                                                                 toast.success("Purchase successful! Enrolling you now...");
-                                                                window.location.href = `/learn/${course.id}`;
+                                                                window.location.href = `/learn/${course.id}?success=true`;
                                                             } else {
                                                                 toast.error(result.error || "Payment failed. Please try again.");
                                                             }

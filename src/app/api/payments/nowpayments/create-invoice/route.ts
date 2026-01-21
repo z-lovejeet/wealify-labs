@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         }
 
         const payload = {
-            price_amount: 0.1, // TEST MODE
+            price_amount: 2.0, // TEST MODE
             price_currency: "usd",
             order_id: `${user.id}:${courseId}`, // Composite ID to track user and course
             order_description: `Purchase: ${course.title}`,

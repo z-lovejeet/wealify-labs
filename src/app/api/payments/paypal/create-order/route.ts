@@ -60,7 +60,7 @@ export async function POST(req: Request) {
                         description: course.title,
                         amount: {
                             currency_code: "USD",
-                            value: "0.1", // TEST MODE
+                            value: "2.0", // TEST MODE
                         },
                         reference_id: courseId, // Track course ID
                         custom_id: user.id,     // Track user ID

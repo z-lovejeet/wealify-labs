@@ -71,6 +71,11 @@ export async function POST(req: Request) {
 
         const order = await response.json();
 
+        if (!response.ok || (order.name === "AUTHENTICATION_FAILURE") || (order.error)) {
+            console.error("PayPal API Error:", order);
+            return NextResponse.json({ error: "PayPal API Error", details: order }, { status: response.status });
+        }
+
         return NextResponse.json(order);
     } catch (error: any) {
         console.error("PayPal Create Order Error:", error);

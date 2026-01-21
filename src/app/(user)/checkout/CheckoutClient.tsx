@@ -160,31 +160,48 @@ export default function CheckoutClient({ user, course }: CheckoutClientProps) {
                                                 <PayPalButtons
                                                     style={{ layout: "vertical", shape: "rect", label: "pay" }}
                                                     createOrder={async () => {
-                                                        const response = await fetch('/api/payments/paypal/create-order', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ courseId: course.id })
-                                                        });
-                                                        const order = await response.json();
-                                                        return order.id;
-                                                    }}
-                                                    onApprove={async (data) => {
-                                                        const response = await fetch('/api/payments/paypal/capture-order', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ orderID: data.orderID })
-                                                        });
-                                                        const result = await response.json();
-                                                        if (result.success) {
-                                                            toast.success("Purchase successful! Enrolling you now...");
-                                                            window.location.href = `/learn/${course.id}`;
-                                                        } else {
-                                                            toast.error("Payment failed. Please try again.");
+                                                        try {
+                                                            const response = await fetch('/api/payments/paypal/create-order', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ courseId: course.id })
+                                                            });
+                                                            const order = await response.json();
+                                                            if (!response.ok) {
+                                                                throw new Error(order.error || order.details || "Failed to create order");
+                                                            }
+                                                            if (!order.id) {
+                                                                throw new Error("Invalid order ID received from server");
+                                                            }
+                                                            return order.id;
+                                                        } catch (err: any) {
+                                                            console.error("Create Order Error:", err);
+                                                            throw err; // Re-throw to trigger onError
                                                         }
                                                     }}
-                                                    onError={(err) => {
+                                                    onApprove={async (data) => {
+                                                        try {
+                                                            const response = await fetch('/api/payments/paypal/capture-order', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ orderID: data.orderID })
+                                                            });
+                                                            const result = await response.json();
+                                                            if (result.success) {
+                                                                toast.success("Purchase successful! Enrolling you now...");
+                                                                window.location.href = `/learn/${course.id}`;
+                                                            } else {
+                                                                toast.error(result.error || "Payment failed. Please try again.");
+                                                            }
+                                                        } catch (err) {
+                                                            toast.error("An error occurred during payment capture.");
+                                                        }
+                                                    }}
+                                                    onError={(err: any) => {
                                                         console.error("PayPal Error:", err);
-                                                        toast.error("An error occurred with PayPal.");
+                                                        // Attempt to extract meaningful message
+                                                        const msg = err?.message || String(err);
+                                                        toast.error(`Payment Error: ${msg}`);
                                                     }}
                                                 />
                                             </div>

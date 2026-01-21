@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-const PAYPAL_API = "https://api-m.sandbox.paypal.com";
+const PAYPAL_API = "https://api-m.paypal.com"; // Live Endpoint
 
 async function generateAccessToken() {
     const auth = Buffer.from(

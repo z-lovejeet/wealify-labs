@@ -25,29 +25,18 @@ export default function ContactPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        console.log("🚀 Starting form submission...");
-        console.log("Form Data:", formData);
 
         try {
-            console.log("📡 Sending request to Supabase 'contact_messages' table...");
-
-            // Direct call without timeout for debugging
-            // Added .select() to ensure we get a response object back explicitly
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('contact_messages')
-                .insert([formData])
-                .select();
-
-            console.log("✅ Supabase operation completed.");
-            console.log("Response Data:", data);
-            console.log("Response Error:", error);
+                .insert([formData]);
 
             if (error) throw error;
 
             toast.success("Message sent successfully! We'll get back to you soon.");
             setFormData({ first_name: "", last_name: "", email: "", message: "" });
         } catch (error: any) {
-            console.error("❌ Submission Caught Error:", error);
+            console.error("Submission error:", error);
 
             toast.error(
                 "Failed to send message: " + (error.message || "Unknown error")

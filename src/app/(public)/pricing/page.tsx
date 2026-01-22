@@ -106,7 +106,7 @@ export default async function PricingPage() {
                                         <BookOpen className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-lg">8 Core Learning Modules</h4>
+                                        <h4 className="font-bold text-lg">47 In-Depth Chapters</h4>
                                         <p className="text-sm text-muted-foreground">Step-by-step training covering mentality, strategy, and execution.</p>
                                     </div>
                                 </div>

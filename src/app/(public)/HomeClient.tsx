@@ -293,7 +293,7 @@ export default function HomeClient({ user, hasAccess, course }: HomeClientProps)
                                 <div className="p-6 bg-background rounded-xl border border-white/5 flex items-center gap-4 text-left hover:border-primary/20 transition-colors">
                                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500"><BookOpen className="w-5 h-5" /></div>
                                     <div>
-                                        <div className="font-bold">In-Depth Lesson Modules</div>
+                                        <div className="font-bold">47 In-Depth Chapters</div>
                                         <div className="text-xs text-muted-foreground">Detailed guides on every topic</div>
                                     </div>
                                 </div>

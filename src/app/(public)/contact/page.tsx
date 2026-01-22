@@ -25,34 +25,32 @@ export default function ContactPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        console.log("🚀 Starting form submission...");
+        console.log("Form Data:", formData);
 
         try {
-            // Create a timeout promise to prevent infinite hanging
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Request timed out - Server did not respond")), 15000)
-            );
+            console.log("📡 Sending request to Supabase 'contact_messages' table...");
 
-            // Race the insert against the timeout
-            const { error } = await Promise.race([
-                supabase
-                    .from('contact_messages')
-                    .insert([formData]),
-                timeoutPromise
-            ]) as any;
+            // Direct call without timeout for debugging
+            // Added .select() to ensure we get a response object back explicitly
+            const { data, error } = await supabase
+                .from('contact_messages')
+                .insert([formData])
+                .select();
+
+            console.log("✅ Supabase operation completed.");
+            console.log("Response Data:", data);
+            console.log("Response Error:", error);
 
             if (error) throw error;
 
             toast.success("Message sent successfully! We'll get back to you soon.");
             setFormData({ first_name: "", last_name: "", email: "", message: "" });
         } catch (error: any) {
-            console.error("Submission error:", error);
-            // Check for likely missing table error to give better feedback (conditionally)
-            const isMissingTable = error.message?.includes("relation") || error.message?.includes("exist");
+            console.error("❌ Submission Caught Error:", error);
 
             toast.error(
-                isMissingTable
-                    ? "System Error: Message service unavailable. Please contact admin."
-                    : "Failed to send message: " + (error.message || "Unknown error")
+                "Failed to send message: " + (error.message || "Unknown error")
             );
         } finally {
             setLoading(false);

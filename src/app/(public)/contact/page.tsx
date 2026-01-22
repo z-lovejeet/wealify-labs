@@ -8,8 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { submitContactForm } from "@/actions/contact";
 
 export default function ContactPage() {
     const [loading, setLoading] = useState(false);
@@ -20,27 +20,22 @@ export default function ContactPage() {
         message: ""
     });
 
-    const supabase = createClient();
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const { error } = await supabase
-                .from('contact_messages')
-                .insert([formData]);
+            const result = await submitContactForm(formData);
 
-            if (error) throw error;
+            if (!result.success) {
+                throw new Error(result.error);
+            }
 
             toast.success("Message sent successfully! We'll get back to you soon.");
             setFormData({ first_name: "", last_name: "", email: "", message: "" });
         } catch (error: any) {
             console.error("Submission error:", error);
-
-            toast.error(
-                "Failed to send message: " + (error.message || "Unknown error")
-            );
+            toast.error("Failed to send message: " + (error.message || "Unknown error"));
         } finally {
             setLoading(false);
         }

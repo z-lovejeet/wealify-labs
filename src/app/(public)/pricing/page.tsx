@@ -5,8 +5,6 @@ import { cookies } from "next/headers";
 import { singleCourse } from "@/lib/mock-data";
 import PricingClient from "./PricingClient";
 
-export const dynamic = "force-dynamic";
-
 export default async function PricingPage() {
     const cookieStore = await cookies();
 
@@ -33,33 +31,29 @@ export default async function PricingPage() {
         }
     );
 
-    // Default values
+    // Parallel Fetching
+    const coursePromise = supabase
+        .from('courses')
+        .select('*')
+        .eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+        .single();
+
+    const userPromise = supabase.auth.getUser();
+
+    const [courseResult, userResult] = await Promise.all([coursePromise, userPromise]);
+
+    // Handle Course
     let course = singleCourse;
-    let user = null;
-    let hasAccess = false;
-
-    // 1. Fetch Course
-    try {
-        const { data: routeCourse } = await supabase
-            .from('courses')
-            .select('*')
-            .eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
-            .single();
-
-        if (routeCourse) {
-            course = routeCourse;
-
-        }
-    } catch (e) {
-        console.error("Error fetching course:", e);
+    if (courseResult.data) {
+        course = courseResult.data;
     }
 
-    // 2. Fetch User & Access
-    try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        user = authUser;
+    // Handle User & Access
+    let user = userResult.data.user;
+    let hasAccess = false;
 
-        if (user && course) {
+    if (user && course) {
+        try {
             const { data: enrollments } = await supabase
                 .from('enrollments')
                 .select('id')
@@ -69,9 +63,9 @@ export default async function PricingPage() {
             if (enrollments && enrollments.length > 0) {
                 hasAccess = true;
             }
+        } catch (e) {
+            console.error("Error fetching access:", e);
         }
-    } catch (e) {
-        console.error("Error fetching user/access:", e);
     }
 
     return (

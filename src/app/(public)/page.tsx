@@ -3,8 +3,6 @@ import { cookies } from "next/headers";
 import { singleCourse } from "@/lib/mock-data";
 import HomeClient from "./HomeClient";
 
-export const dynamic = "force-dynamic";
-
 export default async function HomePage() {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -28,25 +26,27 @@ export default async function HomePage() {
         }
     );
 
-    // Fetch Course Details
-    let course = singleCourse;
-    try {
-        const { data: courseData } = await supabase
-            .from('courses')
-            .select('*')
-            .eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
-            .single();
+    // Parallel Fetching: Start both critical fetches immediately
+    const coursePromise = supabase
+        .from('courses')
+        .select('*')
+        .eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+        .single();
 
-        if (courseData) {
-            course = courseData;
-        }
-    } catch (e) {
-        // use mock
+    const userPromise = supabase.auth.getUser();
+
+    const [courseResult, userResult] = await Promise.all([coursePromise, userPromise]);
+
+    // Handle Course Data
+    let course = singleCourse;
+    if (courseResult.data) {
+        course = courseResult.data;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-
+    // Handle User & Access
+    const user = userResult.data.user;
     let hasAccess = false;
+
     if (user) {
         try {
             const { data: enrollments } = await supabase

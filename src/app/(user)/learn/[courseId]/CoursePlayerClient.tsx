@@ -351,7 +351,7 @@ export default function CoursePlayerClient({
                                         Congratulations!
                                     </h2>
                                     <p className="text-xl text-muted-foreground font-medium">
-                                        You've completed the course.
+                                        You&apos;ve completed the course.
                                     </p>
                                 </div>
 
@@ -359,12 +359,12 @@ export default function CoursePlayerClient({
 
                                 <div className="prose prose-lg dark:prose-invert mx-auto text-muted-foreground leading-relaxed">
                                     <p>
-                                        You've taken a massive step toward building your digital future.
+                                        You&apos;ve taken a massive step toward building your digital future.
                                         We are incredibly proud of your dedication and commitment.
                                     </p>
                                     <p>
                                         Remember, knowledge is only potential power—execution is everything.
-                                        Take what you've learned here, apply it consistently, and don't be afraid to experiment.
+                                        Take what you&apos;ve learned here, apply it consistently, and don&apos;t be afraid to experiment.
                                     </p>
                                     <p className="font-semibold text-foreground text-lg pt-2">
                                         Welcome to the top 1%. Your journey has just begun.

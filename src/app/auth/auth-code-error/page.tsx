@@ -9,20 +9,23 @@ import { Suspense, useEffect, useState } from "react";
 
 function AuthCodeErrorContent() {
     const searchParams = useSearchParams();
-    const [error, setError] = useState<string | null>(null);
+    const [hashError, setHashError] = useState<string | null>(null);
+
+    // Derived state for search params (no effect needed)
+    const searchError = searchParams.get("error_description") || searchParams.get("error");
 
     useEffect(() => {
-        // Try to get error from search params
-        let errorMsg = searchParams.get("error_description") || searchParams.get("error");
-
-        // Also check hash params if search params are empty (Supabase sometimes puts errors in hash)
-        if (!errorMsg && typeof window !== "undefined" && window.location.hash) {
+        // Only check hash params on mount/client-side
+        if (!searchError && typeof window !== "undefined" && window.location.hash) {
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
-            errorMsg = hashParams.get("error_description") || hashParams.get("error");
+            const errorMsg = hashParams.get("error_description") || hashParams.get("error");
+            if (errorMsg) {
+                setTimeout(() => setHashError(errorMsg), 0);
+            }
         }
+    }, [searchError]); // Depend on searchError to avoid overwriting if search exists
 
-        setError(errorMsg || "An unknown authentication error occurred.");
-    }, [searchParams]);
+    const displayError = searchError || hashError || "An unknown authentication error occurred.";
 
     return (
         <Card className="w-full max-w-md border-destructive/50 shadow-lg">
@@ -37,7 +40,7 @@ function AuthCodeErrorContent() {
             </CardHeader>
             <CardContent className="text-center space-y-4">
                 <div className="p-4 bg-secondary/50 rounded-lg text-sm text-foreground/80 font-mono break-words">
-                    {error}
+                    {displayError}
                 </div>
                 <p className="text-sm text-muted-foreground">
                     This link may have expired or has already been used. Please try requesting a new one.

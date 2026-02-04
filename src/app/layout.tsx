@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { SocialProofPopup } from "@/components/SocialProofPopup";
 import { Analytics } from "@vercel/analytics/react";
+import { DynamicSocialProofPopup } from "@/components/DynamicSocialProofPopup";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +32,7 @@ export default function RootLayout({
       >
         {children}
         <Toaster />
-        <SocialProofPopup />
+        <DynamicSocialProofPopup />
         <Analytics />
       </body>
     </html>

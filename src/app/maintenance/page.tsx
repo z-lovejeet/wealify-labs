@@ -12,7 +12,7 @@ export default function MaintenancePage() {
                 Under Maintenance
             </h1>
             <p className="text-xl text-muted-foreground max-w-md mb-8">
-                We are currently performing scheduled maintenance to improve your experience. We'll be back shortly.
+                We are currently performing scheduled maintenance to improve your experience. We&apos;ll be back shortly.
             </p>
             <div className="flex gap-4">
                 <a href="mailto:support@wealifylabs.site">

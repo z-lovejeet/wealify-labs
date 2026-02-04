@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -259,9 +260,18 @@ export default function HomeClient({ user, hasAccess, course }: HomeClientProps)
                                     </p>
                                 </CardHeader>
                                 <CardContent className="pt-0 flex items-center gap-4 mt-auto">
-                                    <Avatar className="h-10 w-10 border border-primary/20">
-                                        <AvatarImage src={review.image} alt={review.name} />
-                                        <AvatarFallback>{review.name.charAt(0)}</AvatarFallback>
+                                    <Avatar className="h-10 w-10 border border-primary/20 relative">
+                                        {review.image ? (
+                                            <NextImage
+                                                src={review.image}
+                                                alt={review.name}
+                                                fill
+                                                sizes="40px"
+                                                className="object-cover"
+                                            />
+                                        ) : (
+                                            <AvatarFallback>{review.name.charAt(0)}</AvatarFallback>
+                                        )}
                                     </Avatar>
                                     <div>
                                         <h4 className="font-bold text-sm">{review.name}</h4>

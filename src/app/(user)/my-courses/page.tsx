@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -98,7 +99,7 @@ export default async function MyCoursesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
                         <div className="relative w-full aspect-auto md:h-full bg-muted min-h-[200px]">
                             {course.thumbnail_url ? (
-                                <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full" />
+                                <Image src={course.thumbnail_url} alt={course.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 40vw" />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center bg-muted">
                                     <BookOpen className="w-16 h-16 text-muted-foreground/50" />
@@ -132,7 +133,7 @@ export default async function MyCoursesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
                         <div className="md:col-span-2 relative w-full aspect-auto md:h-full bg-muted min-h-[200px]">
                             {course.thumbnail_url ? (
-                                <img src={course.thumbnail_url} alt={course.title} className="object-cover w-full h-full" />
+                                <Image src={course.thumbnail_url} alt={course.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 40vw" />
                             ) : (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                     <BookOpen className="w-16 h-16 text-white/80" />

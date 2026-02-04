@@ -9,7 +9,13 @@ export default async function AdminLayout({
     children: React.ReactNode;
 }) {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const [
+        { data: { user } },
+        { data: settingsData }
+    ] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from('platform_settings').select('*').eq('key', 'site_name').single()
+    ]);
 
     let userWithProfile = null;
     if (user) {
@@ -22,9 +28,8 @@ export default async function AdminLayout({
     }
 
     let siteName = "Wealify Labs";
-    const { data: settings } = await supabase.from('platform_settings').select('*').eq('key', 'site_name').single();
-    if (settings) {
-        siteName = settings.value;
+    if (settingsData) {
+        siteName = settingsData.value;
     }
 
     // Double-Protection: Layout Guard

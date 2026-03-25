@@ -15,7 +15,7 @@ export default function MaintenancePage() {
                 We are currently performing scheduled maintenance to improve your experience. We&apos;ll be back shortly.
             </p>
             <div className="flex gap-4">
-                <a href="mailto:support@wealifylabs.site">
+                <a href="mailto:wealifylabs@gmail.com">
                     <Button variant="outline">Contact Support</Button>
                 </a>
             </div>

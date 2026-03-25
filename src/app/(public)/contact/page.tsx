@@ -146,7 +146,7 @@ export default function ContactPage() {
                                     </div>
                                     <div>
                                         <div className="font-semibold">Email</div>
-                                        <div className="text-muted-foreground text-sm">support@wealifylabs.site</div>
+                                        <div className="text-muted-foreground text-sm">wealifylabs@gmail.com</div>
                                     </div>
                                 </CardContent>
                             </Card>

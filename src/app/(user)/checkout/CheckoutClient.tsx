@@ -10,6 +10,13 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { getPlatformSettings } from "@/app/actions/settings";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 interface CheckoutClientProps {
     user: any;
@@ -20,16 +27,15 @@ export default function CheckoutClient({ user, course }: CheckoutClientProps) {
     const [processing, setProcessing] = useState(false);
     const [settings, setSettings] = useState<any>({});
     const [paymentMethod, setPaymentMethod] = useState("");
+    const [showDisabledPopup, setShowDisabledPopup] = useState(true);
 
     useEffect(() => {
         const loadSettings = async () => {
             const siteSettings = await getPlatformSettings();
+            // Force disable all payments per request
+            siteSettings.enable_paypal = 'false';
+            siteSettings.enable_nowpayments = 'false';
             setSettings(siteSettings);
-            if (siteSettings.enable_paypal === 'true') {
-                setPaymentMethod("paypal");
-            } else if (siteSettings.enable_nowpayments === 'true') {
-                setPaymentMethod("crypto");
-            }
         };
         loadSettings();
     }, []);
@@ -307,6 +313,22 @@ export default function CheckoutClient({ user, course }: CheckoutClientProps) {
                     </motion.div>
                 </div>
             </div>
+
+            <Dialog open={showDisabledPopup} onOpenChange={setShowDisabledPopup}>
+                <DialogContent className="sm:max-w-md text-center">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-2xl">Payments Disabled</DialogTitle>
+                        <DialogDescription className="text-center text-base pt-2">
+                            We are currently not accepting new enrollments. Payment methods have been temporarily disabled across the site. Please check back later.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-center mt-4">
+                        <Button onClick={() => setShowDisabledPopup(false)} variant="outline">
+                            Close
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </PayPalScriptProvider>
     );
 }

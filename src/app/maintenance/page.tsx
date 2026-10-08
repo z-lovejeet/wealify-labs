@@ -1,6 +1,5 @@
 import { Construction } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export default function MaintenancePage() {
     return (
@@ -14,9 +13,12 @@ export default function MaintenancePage() {
             <p className="text-xl text-muted-foreground max-w-md mb-8">
                 We are currently performing scheduled maintenance to improve your experience. We&apos;ll be back shortly.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+                <a href="mailto:support@wealifylabs.site">
+                    <Button variant="default">Contact Support (Primary)</Button>
+                </a>
                 <a href="mailto:wealifylabs@gmail.com">
-                    <Button variant="outline">Contact Support</Button>
+                    <Button variant="outline">Secondary Email</Button>
                 </a>
             </div>
         </div>

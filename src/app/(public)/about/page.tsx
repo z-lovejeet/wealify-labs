@@ -3,125 +3,180 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, Globe, Users, TrendingUp } from "lucide-react";
+import { CheckCircle2, Globe, Users, TrendingUp, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function AboutPage() {
     return (
-        <div className="bg-background min-h-screen">
-            {/* Hero Section */}
-            <section className="relative py-32 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background opacity-70" />
-                <div className="container relative z-10 px-6 mx-auto text-center max-w-5xl">
-                    <Badge variant="outline" className="mb-8 px-6 py-2 border-primary/20 text-primary bg-primary/5 text-sm uppercase tracking-widest font-semibold">About Wealify Labs</Badge>
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
+        <div className="bg-background min-h-screen pt-24 pb-24 relative overflow-hidden">
+            {/* Ambient Background Glows matching Pricing & Contact */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+                <div className="absolute top-10 right-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px]" />
+                <div className="absolute bottom-10 left-1/4 w-[600px] h-[600px] bg-secondary/15 rounded-full blur-[140px]" />
+            </div>
+
+            <div className="container max-w-6xl mx-auto px-6">
+                {/* Hero Header - Exactly Proportional to Pricing & Contact */}
+                <div className="text-center mb-16 max-w-3xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-tight"
+                        transition={{ duration: 0.4 }}
                     >
-                        Building the Future of <span className="text-primary block md:inline">Digital Innovation</span>
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto"
-                    >
-                        Wealify Labs provides premium, project-based learning resources for developers and creators who demand excellence. We bridge the gap between theory and production.
-                    </motion.p>
+                        <Badge variant="outline" className="mb-4 px-4 py-1.5 border-primary/30 text-primary bg-primary/5 uppercase tracking-widest text-xs font-semibold">
+                            About Wealify Labs
+                        </Badge>
+                        <h1 className="text-4xl sm:text-6xl font-black mb-6 tracking-tight text-foreground leading-[1.1]">
+                            Empowering Your Journey to <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-primary to-amber-200">
+                                Digital Wealth
+                            </span>
+                        </h1>
+                        <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                            Actionable, blueprint-driven education for ambitious builders and professionals looking to construct sustainable digital income streams in 2026.
+                        </p>
+                    </motion.div>
                 </div>
-            </section>
 
-            {/* Story/Values Section */}
-            <section className="py-20 bg-secondary/5 border-y border-border/50">
-                <div className="container px-6 mx-auto max-w-6xl">
-                    <div className="grid md:grid-cols-2 gap-16 items-start">
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5 }}
-                            className="space-y-6"
-                        >
-                            <h2 className="text-3xl font-bold">What We Do</h2>
-                            <p className="text-muted-foreground leading-relaxed">
-                                At Wealify Labs, we specialize in high-quality, project-based education. We don't just teach syntax; we teach <strong>architecture, best practices, and production readiness</strong>.
-                            </p>
-                            <p className="text-muted-foreground leading-relaxed">
-                                Our mission is to empower developers to build complex, scalable applications by providing them with the "Cheat Codes" to modern development—starter kits, comprehensive courses, and reusable components.
-                            </p>
+                {/* Main Content Grid */}
+                <div className="grid md:grid-cols-2 gap-12 items-start mb-20">
+                    {/* Left: What We Do & Philosophy */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5 }}
+                        className="space-y-6"
+                    >
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-bold text-primary uppercase tracking-widest">Founded Dec 2025</span>
+                                <span className="text-xs text-muted-foreground">•</span>
+                                <span className="text-xs text-muted-foreground font-medium">Founder: Lovejeet Singh</span>
+                            </div>
+                            <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-4">Building The AI-Native Digital Venture Platform</h2>
+                        </div>
+                        <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                            Wealify Labs was founded in <strong>December 2025</strong> by <strong>Lovejeet Singh</strong> with a singular mission: to replace obsolete, passive video courses with an <strong>AI-augmented execution platform</strong> designed for the 2026 digital economy.
+                        </p>
+                        <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                            Instead of leaving students stranded with theory, Wealify combines <strong>48 battle-tested masterclass blueprints</strong> with real-time <strong>Claude 5.5 Sonnet AI Copilots</strong>. Our platform audits your business ideas, stress-tests your pricing, drafts conversion copy, and provides chapter-by-chapter mentorship 24/7.
+                        </p>
 
-                            <h3 className="text-xl font-bold pt-4">Our Core Values</h3>
-                            <ul className="space-y-4">
-                                <li className="flex items-start gap-3">
-                                    <div className="mt-1 p-1 bg-primary/10 rounded-full text-primary"><CheckCircle2 className="w-4 h-4" /></div>
-                                    <span className="text-muted-foreground"><strong>Practical Focus:</strong> No fluff. We focus on tools you will actually use in the industry.</span>
+                        <div className="pt-4">
+                            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-primary" />
+                                Three AI Platform Pillars
+                            </h3>
+                            <ul className="space-y-3.5">
+                                <li className="flex items-start gap-3 p-3.5 rounded-xl bg-card/60 border border-border/50">
+                                    <div className="mt-0.5 p-1 bg-primary/10 rounded-lg text-primary shrink-0"><CheckCircle2 className="w-4 h-4" /></div>
+                                    <div className="text-xs sm:text-sm text-muted-foreground">
+                                        <strong className="text-foreground">Agentic Curriculum Copilot:</strong> An interactive mentor inside the course player that contextualizes each chapter, diagnoses weaknesses, and produces custom 3-step action plans.
+                                    </div>
                                 </li>
-                                <li className="flex items-start gap-3">
-                                    <div className="mt-1 p-1 bg-primary/10 rounded-full text-primary"><CheckCircle2 className="w-4 h-4" /></div>
-                                    <span className="text-muted-foreground"><strong>Modern Standards:</strong> We teach the latest versions of Next.js, React, and TypeScript.</span>
+                                <li className="flex items-start gap-3 p-3.5 rounded-xl bg-card/60 border border-border/50">
+                                    <div className="mt-0.5 p-1 bg-primary/10 rounded-lg text-primary shrink-0"><CheckCircle2 className="w-4 h-4" /></div>
+                                    <div className="text-xs sm:text-sm text-muted-foreground">
+                                        <strong className="text-foreground">Venture Idea Auditor:</strong> Multi-step evaluation engine that evaluates student offers against market viability, unit economics, and 7-day zero-cost validation tests.
+                                    </div>
                                 </li>
-                                <li className="flex items-start gap-3">
-                                    <div className="mt-1 p-1 bg-primary/10 rounded-full text-primary"><CheckCircle2 className="w-4 h-4" /></div>
-                                    <span className="text-muted-foreground"><strong>Transparency:</strong> What you see is what you get. No hidden fees or fake promises.</span>
+                                <li className="flex items-start gap-3 p-3.5 rounded-xl bg-card/60 border border-border/50">
+                                    <div className="mt-0.5 p-1 bg-primary/10 rounded-lg text-primary shrink-0"><CheckCircle2 className="w-4 h-4" /></div>
+                                    <div className="text-xs sm:text-sm text-muted-foreground">
+                                        <strong className="text-foreground">Direct-Response Copy Architect:</strong> Generates high-converting marketing hooks, value propositions, and risk-reversal guarantees tailored to each student&apos;s niche.
+                                    </div>
                                 </li>
                             </ul>
-                        </motion.div>
+                        </div>
+                    </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            className="space-y-6"
-                        >
-                            <h2 className="text-3xl font-bold">What We Sell</h2>
-                            <p className="text-muted-foreground leading-relaxed">
-                                We offer a curated selection of premium courses and digital assets designed to accelerate your career.
-                            </p>
+                    {/* Right: Deliverables & Value Bento */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="space-y-6"
+                    >
+                        <div>
+                            <span className="text-xs font-bold text-primary uppercase tracking-widest block mb-2">Student Experience</span>
+                            <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-4">What You Receive</h2>
+                        </div>
+                        <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                            Unrestricted lifetime enrollment to our full educational workspace and learning environment.
+                        </p>
 
-                            <div className="grid gap-6">
-                                <Card className="bg-background border-border/50">
-                                    <CardContent className="p-6">
-                                        <div className="flex items-center gap-4 mb-3">
-                                            <div className="p-2 bg-primary/10 rounded-lg text-primary"><Globe className="w-5 h-5" /></div>
-                                            <h3 className="font-bold text-lg">Full-Stack Courses</h3>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">Comprehensive guides on building SaaS platforms, E-commerce sites, and interactive dashboards from scratch.</p>
-                                    </CardContent>
-                                </Card>
+                        <div className="grid gap-4">
+                            <Card className="bg-card/70 border border-border/60 backdrop-blur-md rounded-2xl">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center gap-3.5 mb-2.5">
+                                        <div className="p-2.5 bg-primary/10 border border-primary/20 rounded-xl text-primary"><TrendingUp className="w-5 h-5" /></div>
+                                        <h3 className="font-bold text-base text-foreground">The Modern Side Hustle Blueprint</h3>
+                                    </div>
+                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                        47 concise chapters covering mindset, validation, high-converting offer creation, automated funnels, and scale.
+                                    </p>
+                                </CardContent>
+                            </Card>
 
-                                <Card className="bg-background border-border/50">
-                                    <CardContent className="p-6">
-                                        <div className="flex items-center gap-4 mb-3">
-                                            <div className="p-2 bg-primary/10 rounded-lg text-primary"><Users className="w-5 h-5" /></div>
-                                            <h3 className="font-bold text-lg">Mentorship & Community</h3>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">Access to a private community of builders where you can ask questions, share progress, and find collaborators.</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </motion.div>
-                    </div>
+                            <Card className="bg-card/70 border border-border/60 backdrop-blur-md rounded-2xl">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center gap-3.5 mb-2.5">
+                                        <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400"><Globe className="w-5 h-5" /></div>
+                                        <h3 className="font-bold text-base text-foreground">Downloadable Toolkits & Assets</h3>
+                                    </div>
+                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                        Direct access to validation scorecards, copy swipe files, financial trackers, and Notion execution databases.
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="bg-card/70 border border-border/60 backdrop-blur-md rounded-2xl">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center gap-3.5 mb-2.5">
+                                        <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400"><Users className="w-5 h-5" /></div>
+                                        <h3 className="font-bold text-base text-foreground">Official Digital Certificate</h3>
+                                    </div>
+                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                        An official verified completion credential issued upon finishing all curriculum chapters and milestones.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </motion.div>
                 </div>
-            </section>
 
-            {/* CTA */}
-            <section className="py-24 container mx-auto">
+                {/* Clean Bottom Call to Action */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="flex flex-col items-center text-center space-y-8"
+                    className="p-8 sm:p-12 rounded-3xl border border-primary/30 bg-gradient-to-br from-card/90 via-card/50 to-primary/5 backdrop-blur-xl text-center shadow-xl relative overflow-hidden"
                 >
-                    <h2 className="text-3xl md:text-5xl font-bold max-w-2xl mx-auto">Start Your Learning Journey</h2>
-                    <Link href="/pricing">
-                        <Button size="lg" className="rounded-full px-10 h-14 text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">Explore Courses</Button>
-                    </Link>
+                    <div className="max-w-xl mx-auto space-y-5">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+                            <ShieldCheck className="w-4 h-4" /> Start Today
+                        </div>
+                        <h2 className="text-2xl sm:text-4xl font-black text-foreground tracking-tight">
+                            Ready to Build Your Digital Assets?
+                        </h2>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                            Unlock immediate lifetime enrollment with cryptocurrency via NOWPayments.
+                        </p>
+                        <div className="pt-2">
+                            <Link href="/pricing">
+                                <Button size="lg" className="rounded-full px-8 h-12 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:scale-105 group">
+                                    <span>Enroll in the Blueprint</span>
+                                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
                 </motion.div>
-            </section>
+            </div>
         </div>
     );
 }

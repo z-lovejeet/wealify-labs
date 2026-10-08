@@ -1,39 +1,43 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { singleCourse } from "@/lib/mock-data";
 import DashboardClient from "./DashboardClient";
 
-const COURSE_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
-
 export default async function DashboardPage() {
-    const supabase = await createClient(); // Await strictly needed for server client
+    const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         redirect("/login");
     }
 
-    // Parallel Fetch ALL: Profile, Course, Enrollments, Modules, Completions
-    // We can fetch modules and completions blindly for the course/user because we have the IDs
-    const [profileResult, courseResult, enrollmentResult, modulesResult, completionsResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('courses').select('*').eq('id', COURSE_ID).single(),
-        supabase.from('enrollments').select('*').eq('user_id', user.id).eq('course_id', COURSE_ID),
-        supabase.from('modules').select('id, lessons(id)').eq('course_id', COURSE_ID),
-        supabase.from('lesson_completions').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('course_id', COURSE_ID)
+    // 1. Fetch Profile, Enrollments (with Course details), and Default Course fallback
+    const [profileResult, enrollmentsResult, defaultCourseResult] = await Promise.all([
+        supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+        supabase.from('enrollments').select('*, courses(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('courses').select('*').limit(1).maybeSingle()
     ]);
 
     const profile = profileResult.data;
-    const courseData = courseResult.data;
-    const enrollments = enrollmentResult.data;
+    const enrollments = enrollmentsResult.data || [];
+    const userIsEnrolled = enrollments.length > 0;
+
+    // Pick active course (first enrolled course, or first available course in DB, or fallback)
+    const activeCourse = (userIsEnrolled && enrollments[0].courses)
+        ? enrollments[0].courses
+        : (defaultCourseResult.data || singleCourse);
 
     const userWithProfile = { ...user, profile };
-    const userIsEnrolled = enrollments && enrollments.length > 0;
+    const newStats = { totalLessons: 0, completedLessons: 0, progress: 0 };
 
-    let newStats = { totalLessons: 0, completedLessons: 0, progress: 0 };
+    if (activeCourse?.id) {
+        // Fetch modules and completions for the active course
+        const [modulesResult, completionsResult] = await Promise.all([
+            supabase.from('modules').select('id, lessons(id)').eq('course_id', activeCourse.id),
+            supabase.from('lesson_completions').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('course_id', activeCourse.id)
+        ]);
 
-    if (userIsEnrolled && courseData) {
         const modules = modulesResult.data;
-
         let total = 0;
         if (modules) {
             modules.forEach((m: any) => {
@@ -53,8 +57,8 @@ export default async function DashboardPage() {
     return (
         <DashboardClient
             user={userWithProfile}
-            course={courseData}
-            isEnrolled={!!userIsEnrolled}
+            course={activeCourse}
+            isEnrolled={userIsEnrolled}
             stats={newStats}
         />
     );

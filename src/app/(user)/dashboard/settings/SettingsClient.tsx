@@ -29,10 +29,19 @@ export default function SettingsClient({ user }: SettingsClientProps) {
     const handleUpdateProfile = async () => {
         setLoading(true);
         try {
-            const { error } = await supabase.auth.updateUser({
+            const { error: authError } = await supabase.auth.updateUser({
                 data: { full_name: fullName }
             });
-            if (error) throw error;
+            if (authError) throw authError;
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ full_name: fullName })
+                .eq('id', user.id);
+            if (profileError) {
+                console.error("Profile sync error:", profileError);
+            }
+
             toast.success("Profile updated successfully");
             router.refresh();
         } catch (error: any) {

@@ -60,10 +60,9 @@ export default async function ProfilePage() {
 
         if (enrollments && enrollments.length > 0) {
             hasAccess = true;
-            // @ts-expect-error - Supabase JOIN type inference is tricky here
-            if (enrollments[0]?.courses?.title) {
-                // @ts-expect-error
-                enrolledCourse = enrollments[0].courses.title;
+            const firstEnrollment = enrollments[0] as unknown as { courses?: { title?: string } };
+            if (firstEnrollment?.courses?.title) {
+                enrolledCourse = firstEnrollment.courses.title;
             }
         }
     } catch (e) {

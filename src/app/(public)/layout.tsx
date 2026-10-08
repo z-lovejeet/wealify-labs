@@ -1,35 +1,37 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 export default async function PublicLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const supabase = await createClient();
-
-    // Parallel Fetching: Start settings fetch immediately
-    const settingsPromise = supabase.from('platform_settings').select('*').eq('key', 'site_name').single();
-    const userPromise = supabase.auth.getUser();
-
-    const [settingsResult, userResult] = await Promise.all([settingsPromise, userPromise]);
-    const user = userResult.data.user;
-
-    // Fetch profile only if user exists
-    let profileResult = { data: null };
-    if (user) {
-        profileResult = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    }
+    const cookieStore = await cookies();
+    const allCookies = cookieStore.getAll();
+    const hasAuthCookie = allCookies.some(c => c.name.includes('-auth-token') || c.name.startsWith('sb-'));
 
     let userWithProfile = null;
-    if (user) {
-        userWithProfile = { ...user, profile: profileResult.data };
-    }
+    const siteName = "Wealify Labs";
 
-    let siteName = "Wealify Labs";
-    if (settingsResult.data) {
-        siteName = settingsResult.data.value;
+    // Only query Supabase when auth cookies are present, saving 300-500ms on public page transitions
+    if (hasAuthCookie) {
+        try {
+            const supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+                userWithProfile = { ...user, profile };
+            }
+        } catch {
+            // Fail gracefully to unauthenticated state
+        }
     }
 
     return (

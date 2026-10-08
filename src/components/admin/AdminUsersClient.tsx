@@ -10,25 +10,24 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const COURSE_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
-
 interface AdminUsersClientProps {
     initialUsers: any[];
     currentPage: number;
     totalPages: number;
+    courseId: string;
 }
 
-export default function AdminUsersClient({ initialUsers, currentPage, totalPages }: AdminUsersClientProps) {
+export default function AdminUsersClient({ initialUsers, currentPage, totalPages, courseId }: AdminUsersClientProps) {
     const router = useRouter();
     const [loadingId, setLoadingId] = useState<string | null>(null);
 
     const handleToggleEnrollment = async (userId: string, isEnrolled: boolean) => {
         try {
             setLoadingId(userId);
-            await toggleEnrollment(userId, COURSE_ID, !isEnrolled);
+            await toggleEnrollment(userId, courseId, !isEnrolled);
             toast.success(isEnrolled ? "User unenrolled" : "User enrolled");
             router.refresh();
-        } catch (error) {
+        } catch {
             toast.error("Failed to update enrollment");
         } finally {
             setLoadingId(null);
@@ -36,7 +35,7 @@ export default function AdminUsersClient({ initialUsers, currentPage, totalPages
     };
 
     const handlePageChange = (newPage: number) => {
-        router.push(`/admin/users?page=${newPage}`);
+        router.push(`/admin/users?page=${newPage}&courseId=${courseId}`);
     };
 
     return (
@@ -54,7 +53,7 @@ export default function AdminUsersClient({ initialUsers, currentPage, totalPages
                     </TableHeader>
                     <TableBody>
                         {initialUsers.map((user) => {
-                            const isEnrolled = user.enrollments && user.enrollments.some((e: any) => e.course_id === COURSE_ID);
+                            const isEnrolled = user.enrollments && user.enrollments.some((e: any) => e.course_id === courseId);
 
                             return (
                                 <TableRow key={user.id}>
@@ -124,6 +123,6 @@ export default function AdminUsersClient({ initialUsers, currentPage, totalPages
                     Next
                 </Button>
             </div>
-        </div >
+        </div>
     );
 }

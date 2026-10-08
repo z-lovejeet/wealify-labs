@@ -11,18 +11,20 @@ export default async function AdminDashboardPage() {
     const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-    // 1. Fetch Profiles (for Total Users & Growth)
-    const { data: profiles } = await supabase
-        .from('profiles')
-        .select('created_at');
-    const totalUsers = profiles?.length || 0;
+    // 1. Fetch Total Users Count and Recent Profiles (for User Growth)
+    const [totalUsersResult, recentProfilesResult] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('created_at').gte('created_at', firstDayLastMonth.toISOString())
+    ]);
+    const totalUsers = totalUsersResult.count || 0;
+    const recentProfiles = recentProfilesResult.data || [];
 
     // User Growth Calc
-    const newUsersLastMonth = profiles?.filter(p => {
+    const newUsersLastMonth = recentProfiles.filter(p => {
         const d = new Date(p.created_at);
         return d >= firstDayLastMonth && d <= lastDayLastMonth;
     }).length || 0;
-    const newUsersThisMonth = profiles?.filter(p => {
+    const newUsersThisMonth = recentProfiles.filter(p => {
         const d = new Date(p.created_at);
         return d >= firstDayCurrentMonth;
     }).length || 0;
@@ -36,7 +38,8 @@ export default async function AdminDashboardPage() {
         .from('modules')
         .select('*', { count: 'exact', head: true });
 
-    // 3. Fetch Payments (for Revenue, Growth, Recent Sales)
+    // 3. Fetch Payments (Current Year for Revenue, Growth, Recent Sales)
+    const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString();
     const { data: payments } = await supabase
         .from('payments')
         .select(`
@@ -45,6 +48,7 @@ export default async function AdminDashboardPage() {
             profiles (full_name, email, avatar_url)
         `)
         .eq('status', 'paid')
+        .gte('created_at', startOfYear)
         .order('created_at', { ascending: false });
 
     // Revenue Calc

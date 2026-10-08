@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, BookOpen, Users, ShoppingCart, Settings, LogOut, Mail, Award, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { signOutAction } from "@/app/actions/auth";
 
 export const adminSidebarItems = [
     { title: "Dashboard", href: "/admin", icon: LayoutDashboard }, // Base admin path usually dashboard
@@ -42,10 +43,12 @@ export function AdminSidebar() {
                 </nav>
 
                 <div className="mt-auto">
-                    <Button variant="ghost" className="w-full justify-start text-red-400 hover:text-red-500 hover:bg-red-500/10">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log out
-                    </Button>
+                    <form action={signOutAction}>
+                        <Button type="submit" variant="ghost" className="w-full justify-start text-red-400 hover:text-red-500 hover:bg-red-500/10">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Log out
+                        </Button>
+                    </form>
                 </div>
             </div>
         </div>

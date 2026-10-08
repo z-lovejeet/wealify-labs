@@ -103,7 +103,7 @@ export default function AdminReviewsClient({ initialReviews }: ReviewsClientProp
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm mb-4">"{review.feedback}"</p>
+                                <p className="text-sm mb-4">&ldquo;{review.feedback}&rdquo;</p>
                                 <div className="text-xs text-muted-foreground">
                                     Course: {review.courses?.title} • {new Date(review.created_at).toLocaleDateString()}
                                 </div>

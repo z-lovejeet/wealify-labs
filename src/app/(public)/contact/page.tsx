@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin } from "lucide-react";
+import { Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -50,7 +50,7 @@ export default function ContactPage() {
                         transition={{ duration: 0.5 }}
                     >
                         <h1 className="text-4xl font-bold mb-4">Get in Touch</h1>
-                        <p className="text-xl text-muted-foreground">Have questions? We're here to help you start your journey.</p>
+                        <p className="text-xl text-muted-foreground">Have questions? We&apos;re here to help you start your journey.</p>
                     </motion.div>
                 </div>
 
@@ -64,7 +64,7 @@ export default function ContactPage() {
                         <Card className="border-border/50 shadow-lg">
                             <CardHeader>
                                 <CardTitle>Send us a message</CardTitle>
-                                <CardDescription>Fill out the form below and we'll get back to you within 24 hours.</CardDescription>
+                                <CardDescription>Fill out the form below and we&apos;ll get back to you within 24 hours.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -138,22 +138,37 @@ export default function ContactPage() {
                             </p>
                         </div>
 
-                        <div className="space-y-6">
-                            <Card className="bg-secondary/5 border-none hover:bg-secondary/10 transition-colors">
+                        <div className="space-y-4">
+                            <Card className="bg-card/70 border border-border/60 backdrop-blur-md hover:border-primary/40 transition-colors">
                                 <CardContent className="flex items-center gap-4 p-6">
-                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                                         <Mail className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <div className="font-semibold">Email</div>
-                                        <div className="text-muted-foreground text-sm">wealifylabs@gmail.com</div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-foreground">Primary Support</span>
+                                            <span className="text-[10px] font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">Official</span>
+                                        </div>
+                                        <a href="mailto:support@wealifylabs.site" className="text-primary hover:underline text-sm font-medium">
+                                            support@wealifylabs.site
+                                        </a>
                                     </div>
                                 </CardContent>
                             </Card>
 
-
-
-
+                            <Card className="bg-card/70 border border-border/60 backdrop-blur-md hover:border-border transition-colors">
+                                <CardContent className="flex items-center gap-4 p-6">
+                                    <div className="w-12 h-12 rounded-xl bg-secondary/30 border border-border/50 flex items-center justify-center text-muted-foreground">
+                                        <Mail className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Secondary Contact</div>
+                                        <a href="mailto:wealifylabs@gmail.com" className="text-foreground/90 hover:underline text-sm font-medium">
+                                            wealifylabs@gmail.com
+                                        </a>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </motion.div>
                 </div>

@@ -84,7 +84,7 @@ export function Footer() {
 
                         <div className="flex items-center gap-3 pt-1">
                             <a
-                                href="https://www.instagram.com/wealifylab/"
+                                href="https://www.instagram.com/wealifylabs"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-xl bg-secondary/30 border border-border/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all"

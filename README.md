@@ -258,6 +258,7 @@ npm run build
 - **Primary Support:** [support@wealifylabs.site](mailto:support@wealifylabs.site)
 - **Secondary Contact:** [wealifylabs@gmail.com](mailto:wealifylabs@gmail.com)
 - **Founder:** Lovejeet Singh ([lovejeet@wealifylabs.site](mailto:lovejeet@wealifylabs.site))
+- **Instagram:** [@wealifylabs](https://www.instagram.com/wealifylabs)
 - **Website:** [wealifylabs.site](https://wealifylabs.site)
 
 ---

@@ -3,8 +3,32 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+/**
+ * Enforces authentication and admin role verification for all admin server actions.
+ */
+async function assertAdmin() {
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+        throw new Error("Unauthorized: You must be logged in to perform this action.");
+    }
+
+    const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+    if (profileError || profile?.role !== "admin") {
+        throw new Error("Forbidden: Admin privileges required.");
+    }
+
+    return { supabase, user };
+}
+
 export async function createModule(courseId: string, title: string, orderIndex: number) {
-    const supabase = await createClient(); // Await the promise
+    const { supabase } = await assertAdmin();
 
     const { data, error } = await supabase
         .from("modules")
@@ -27,7 +51,7 @@ export async function createModule(courseId: string, title: string, orderIndex: 
 }
 
 export async function createLesson(moduleId: string, title: string, type: "text" | "pdf", content: string, orderIndex: number) {
-    const supabase = await createClient(); // Await the promise
+    const { supabase } = await assertAdmin();
 
     const { data, error } = await supabase
         .from("lessons")
@@ -35,7 +59,7 @@ export async function createLesson(moduleId: string, title: string, type: "text"
             module_id: moduleId,
             title,
             lesson_type: type,
-            content, // URL for video or PDF
+            content, // URL or storage path for PDF
             order_index: orderIndex,
             is_locked: false,
         })
@@ -52,21 +76,21 @@ export async function createLesson(moduleId: string, title: string, type: "text"
 }
 
 export async function deleteModule(moduleId: string) {
-    const supabase = await createClient();
+    const { supabase } = await assertAdmin();
     const { error } = await supabase.from("modules").delete().eq("id", moduleId);
     if (error) throw error;
     revalidatePath("/admin/courses");
 }
 
 export async function deleteLesson(lessonId: string) {
-    const supabase = await createClient();
+    const { supabase } = await assertAdmin();
     const { error } = await supabase.from("lessons").delete().eq("id", lessonId);
     if (error) throw error;
     revalidatePath("/admin/courses");
 }
 
 export async function updateCourse(courseId: string, updates: { price?: number; title?: string; description?: string }) {
-    const supabase = await createClient();
+    const { supabase } = await assertAdmin();
     const { data, error } = await supabase
         .from("courses")
         .update(updates)
@@ -86,14 +110,13 @@ export async function updateCourse(courseId: string, updates: { price?: number; 
 }
 
 export async function toggleEnrollment(userId: string, courseId: string, shouldEnroll: boolean) {
-    const supabase = await createClient();
+    const { supabase } = await assertAdmin();
 
     if (shouldEnroll) {
         const { error } = await supabase
             .from('enrollments')
-            .insert({ user_id: userId, course_id: courseId })
-            .single();
-        if (error && error.code !== '23505') throw error; // Ignore unique violation if already enrolled
+            .upsert({ user_id: userId, course_id: courseId, status: 'active' }, { onConflict: 'user_id, course_id' });
+        if (error) throw error;
     } else {
         const { error } = await supabase
             .from('enrollments')
@@ -106,7 +129,7 @@ export async function toggleEnrollment(userId: string, courseId: string, shouldE
 }
 
 export async function updateModule(moduleId: string, title: string) {
-    const supabase = await createClient();
+    const { supabase } = await assertAdmin();
     const { error } = await supabase
         .from('modules')
         .update({ title })
@@ -117,7 +140,7 @@ export async function updateModule(moduleId: string, title: string) {
 }
 
 export async function updateLesson(lessonId: string, updates: { title?: string; lesson_type?: "text" | "pdf"; content?: string }) {
-    const supabase = await createClient();
+    const { supabase } = await assertAdmin();
     const { error } = await supabase
         .from('lessons')
         .update(updates)

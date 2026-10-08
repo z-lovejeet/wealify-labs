@@ -1,39 +1,59 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+/**
+ * Sanitizes the 'next' parameter to prevent Open Redirect attacks.
+ * Only allows relative internal paths on the same origin (e.g. '/dashboard').
+ */
+function sanitizeRedirectPath(nextParam: string | null): string {
+    if (!nextParam) return '/dashboard';
+
+    // Disallow external URLs, protocol-relative URLs (//attacker.com), backslashes, and schemes
+    if (
+        !nextParam.startsWith('/') ||
+        nextParam.startsWith('//') ||
+        nextParam.includes('://') ||
+        nextParam.includes('\\')
+    ) {
+        return '/dashboard';
+    }
+
+    return nextParam;
+}
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url)
-    const code = searchParams.get('code')
-    // if "next" is in param, use it as the redirect URL
-    const next = searchParams.get('next') ?? '/dashboard'
+    const requestUrl = new URL(request.url);
+    const code = requestUrl.searchParams.get('code');
+    const safeNext = sanitizeRedirectPath(requestUrl.searchParams.get('next'));
 
     if (code) {
-        const supabase = await createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        const supabase = await createClient();
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+
         if (!error) {
-            const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
-            const isLocalEnv = process.env.NODE_ENV === 'development'
-            if (isLocalEnv) {
-                // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-                return NextResponse.redirect(`${origin}${next}`)
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${next}`)
-            } else {
-                return NextResponse.redirect(`${origin}${next}`)
-            }
+            const redirectUrl = new URL(safeNext, requestUrl.origin);
+            return NextResponse.redirect(redirectUrl);
         } else {
-            // Forward the specific code exchange error
-            return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error.message)}`)
+            const errorUrl = new URL('/auth/auth-code-error', requestUrl.origin);
+            errorUrl.searchParams.set('error', error.message);
+            return NextResponse.redirect(errorUrl);
         }
     }
 
-    // Check if there are existing errors in the params (e.g. from Supabase directly)
-    const errorParam = searchParams.get('error')
-    const errorDesc = searchParams.get('error_description')
+    // Check if there are existing errors in the params (e.g. from Supabase OAuth provider directly)
+    const errorParam = requestUrl.searchParams.get('error');
+    const errorDesc = requestUrl.searchParams.get('error_description');
     if (errorParam) {
-        return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(errorParam)}&error_description=${encodeURIComponent(errorDesc || '')}`)
+        const errorUrl = new URL('/auth/auth-code-error', requestUrl.origin);
+        errorUrl.searchParams.set('error', errorParam);
+        if (errorDesc) {
+            errorUrl.searchParams.set('error_description', errorDesc);
+        }
+        return NextResponse.redirect(errorUrl);
     }
 
-    // unexpected: no code and no error
-    return NextResponse.redirect(`${origin}/auth/auth-code-error?error=No+code+provided`)
+    // No code and no error provided
+    const fallbackUrl = new URL('/auth/auth-code-error', requestUrl.origin);
+    fallbackUrl.searchParams.set('error', 'No code provided');
+    return NextResponse.redirect(fallbackUrl);
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { socialProofUsers } from "@/data/user-data";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle, ShieldCheck, User } from "lucide-react";
+import { CheckCircle2, Sparkles } from "lucide-react";
 
 type ActionType = "purchased" | "member";
 
@@ -20,27 +20,20 @@ export function SocialProofPopup() {
         let timeoutId: NodeJS.Timeout;
 
         const showReview = () => {
-            // Pick a random user
             const randomUserIndex = Math.floor(Math.random() * socialProofUsers.length);
             const user = socialProofUsers[randomUserIndex];
-
-            // Fixed action for consistency
             const action: ActionType = "member";
 
             setCurrentData({ user, action });
             setIsVisible(true);
 
-            // Hide after 6 seconds
             setTimeout(() => {
                 setIsVisible(false);
-
-                // Schedule next popup after random 15-30s
                 const randomDelay = Math.floor(Math.random() * (30000 - 15000 + 1)) + 15000;
                 timeoutId = setTimeout(showReview, randomDelay);
             }, 6000);
         };
 
-        // Initial start after random 15-30s
         const initialDelay = Math.floor(Math.random() * (30000 - 15000 + 1)) + 15000;
         timeoutId = setTimeout(showReview, initialDelay);
 
@@ -51,37 +44,36 @@ export function SocialProofPopup() {
         <AnimatePresence>
             {isVisible && currentData && (
                 <motion.div
-                    initial={{ opacity: 0, x: -50, y: 20 }}
+                    initial={{ opacity: 0, x: -40, y: 20 }}
                     animate={{ opacity: 1, x: 0, y: 0 }}
-                    exit={{ opacity: 0, x: -50, scale: 0.95 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="fixed bottom-4 left-4 z-50 max-w-sm rounded-xl border border-border bg-card/95 p-4 shadow-lg backdrop-blur-sm sm:left-6 sm:bottom-6"
+                    exit={{ opacity: 0, x: -40, scale: 0.95 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="fixed bottom-5 left-5 z-50 max-w-sm rounded-2xl border border-border/70 bg-card/90 p-4 shadow-2xl backdrop-blur-xl ring-1 ring-primary/20"
                 >
-                    <div className="flex items-start gap-4">
-                        <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${currentData.action === 'purchased' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary'
-                            }`}>
-                            {currentData.action === 'purchased' ? (
-                                <CheckCircle className="h-5 w-5" />
-                            ) : (
-                                <ShieldCheck className="h-5 w-5" />
-                            )}
+                    <div className="flex items-center gap-3.5">
+                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
+                            <Sparkles className="h-4 w-4" />
+                            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                            </span>
                         </div>
-                        <div className="flex-1 space-y-1">
-                            <p className="text-sm font-medium leading-none text-foreground">
-                                {currentData.action === 'purchased' ? 'Verified Purchase' : 'New Member Joined'}
+                        <div className="flex-1 space-y-0.5">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-foreground">
+                                    {currentData.user.name}
+                                </span>
+                                <span className="text-[11px] text-muted-foreground">
+                                    from {currentData.user.country}
+                                </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-snug">
+                                Enrolled in the <strong className="text-foreground">2026 Blueprint</strong>
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                                <span className="font-semibold text-foreground">{currentData.user.name}</span>
-                                {" from "}
-                                <span className="text-foreground">{currentData.user.country}</span>
-                                {currentData.action === 'purchased'
-                                    ? " just purchased the course"
-                                    : " just joined the community"
-                                }
-                            </p>
-                            <p className="text-xs text-muted-foreground/60">
-                                Verified • Just now
-                            </p>
+                            <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-medium pt-0.5">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Verified enrollment &bull; Just now</span>
+                            </div>
                         </div>
                     </div>
                 </motion.div>

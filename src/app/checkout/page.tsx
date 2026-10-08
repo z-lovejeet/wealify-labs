@@ -6,7 +6,12 @@ import CheckoutClient from "./CheckoutClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function CheckoutPage() {
+interface CheckoutPageProps {
+    searchParams: Promise<{ courseId?: string }>;
+}
+
+export default async function CheckoutPage({ searchParams }: CheckoutPageProps) {
+    const { courseId } = await searchParams;
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -34,25 +39,36 @@ export default async function CheckoutPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect("/login?next=/checkout");
+        const nextUrl = courseId ? `/checkout?courseId=${courseId}` : "/checkout";
+        redirect(`/login?next=${encodeURIComponent(nextUrl)}`);
     }
 
-    // 2. Fetch Course
-    // We try to fetch the real course, fallback to mock if DB empty for now
+    // 2. Fetch Course dynamically
     let course = singleCourse;
     try {
-        const { data: routeCourse } = await supabase
-            .from('courses')
-            .select('*')
-            .eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
-            .single();
+        if (courseId) {
+            const { data: routeCourse } = await supabase
+                .from('courses')
+                .select('*')
+                .eq('id', courseId)
+                .maybeSingle();
 
-        if (routeCourse) {
-            course = routeCourse;
+            if (routeCourse) {
+                course = routeCourse;
+            }
+        } else {
+            const { data: defaultCourse } = await supabase
+                .from('courses')
+                .select('*')
+                .eq('id', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
+                .maybeSingle();
 
+            if (defaultCourse) {
+                course = defaultCourse;
+            }
         }
-    } catch (e) {
-        // Ignore error
+    } catch {
+        // Fallback to singleCourse
     }
 
     // 3. Check Enrollment (Redirect if already enrolled)
@@ -66,10 +82,9 @@ export default async function CheckoutPage() {
         if (enrollments && enrollments.length > 0) {
             redirect(`/learn/${course.id}`);
         }
-    } catch (e) {
-        // Ignore
+    } catch {
+        // Ignore enrollment fetch error
     }
 
     return <CheckoutClient user={user} course={course} />;
 }
-

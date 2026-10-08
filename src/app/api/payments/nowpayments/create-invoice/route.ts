@@ -6,68 +6,90 @@ const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 export async function POST(req: Request) {
     try {
         const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized: Please log in to complete checkout' }, { status: 401 });
+        }
+
+        // 1. Backend Gateway Toggle Verification (Never trust client-side state)
+        const { data: gatewaySetting } = await supabase
+            .from('platform_settings')
+            .select('value')
+            .eq('key', 'enable_nowpayments')
+            .single();
+
+        if (gatewaySetting && gatewaySetting.value === 'false') {
+            return NextResponse.json(
+                { error: 'Crypto payments are currently paused by the administrator.' },
+                { status: 403 }
+            );
         }
 
         const body = await req.json();
         const { courseId } = body;
 
-        // Fetch Course Data
-        const { data: course } = await supabase
+        if (!courseId) {
+            return NextResponse.json({ error: 'Course ID is required' }, { status: 400 });
+        }
+
+        // 2. Fetch Authoritative Course Data from DB
+        const { data: course, error: courseError } = await supabase
             .from('courses')
-            .select('price, title')
+            .select('id, price, title')
             .eq('id', courseId)
             .single();
 
-        if (!course) {
+        if (courseError || !course) {
             return NextResponse.json({ error: 'Course not found' }, { status: 404 });
         }
 
+        const appUrl = (process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin).replace(/\/$/, "");
+
         const payload = {
-            price_amount: course.price,
+            price_amount: Number(course.price),
             price_currency: "usd",
-            order_id: `${user.id}:${courseId}`, // Composite ID to track user and course
-            order_description: `Purchase: ${course.title}`,
-            ipn_callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-site.com'}/api/webhooks/nowpayments`,
-            success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-site.com'}/learn/${courseId}?success=true`,
-            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-site.com'}/checkout?cancel=true`,
+            order_id: `${user.id}:${course.id}`, // Composite identifier: userId:courseId
+            order_description: `Course Access: ${course.title}`,
+            ipn_callback_url: `${appUrl}/api/webhooks/nowpayments`,
+            success_url: `${appUrl}/learn/${course.id}?success=true`,
+            cancel_url: `${appUrl}/checkout?cancel=true`,
         };
 
-        console.log("Creating Invoice for:", user.email, "Course:", course.title);
+        const apiKey = process.env.NOWPAYMENTS_API_KEY;
+        if (!apiKey) {
+            console.error("NOWPAYMENTS_API_KEY is not configured in server environment");
+            return NextResponse.json({ error: 'Payment gateway configuration error' }, { status: 500 });
+        }
 
         const response = await fetch(`${NOWPAYMENTS_API}/invoice`, {
             method: 'POST',
             headers: {
-                'x-api-key': process.env.NOWPAYMENTS_API_KEY!,
+                'x-api-key': apiKey,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),
         });
 
         const responseText = await response.text();
-        console.log("NOWPayments Response Status:", response.status);
-        console.log("NOWPayments Response Body:", responseText);
-
         let data;
         try {
             data = JSON.parse(responseText);
         } catch (e) {
-            console.error("Failed to parse JSON:", e);
-            return NextResponse.json({ error: 'Invalid response from payment provider', details: responseText }, { status: 500 });
+            console.error("NOWPayments invoice parse error:", e, responseText);
+            return NextResponse.json({ error: 'Invalid response from payment gateway' }, { status: 502 });
         }
 
-        if (data.id) {
+        if (response.ok && data?.invoice_url) {
             return NextResponse.json(data);
         } else {
-            console.error("NOWPayments Creation Failed:", data);
-            return NextResponse.json({ error: 'Failed to create invoice', details: data }, { status: 400 });
+            console.error("NOWPayments invoice generation failed:", data);
+            const errorMsg = data?.message || data?.error || 'Failed to create payment invoice';
+            return NextResponse.json({ error: errorMsg, details: data }, { status: response.status || 400 });
         }
 
     } catch (error: any) {
-        console.error("NOWPayments Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("NOWPayments Create Invoice Error:", error);
+        return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
     }
 }

@@ -30,8 +30,8 @@ export default async function HomePage() {
     const coursePromise = supabase
         .from('courses')
         .select('*')
-        .eq('id', "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
-        .single();
+        .eq('id', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
+        .maybeSingle();
 
     const userPromise = supabase.auth.getUser();
 
